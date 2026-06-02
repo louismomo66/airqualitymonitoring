@@ -1,0 +1,115 @@
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo { font-size: 28px; }
+
+.sidebar-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sidebar-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.sidebar-section-label {
+  padding: 16px 20px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.sidebar-loading,
+.sidebar-empty {
+  padding: 12px 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.device-list {
+  list-style: none;
+  flex: 1;
+  padding: 0 8px;
+}
+
+.device-item {
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-bottom: 4px;
+}
+
+.device-item:hover { background: var(--surface2); }
+
+.device-item--active {
+  background: rgba(79, 142, 247, 0.12);
+  border: 1px solid rgba(79, 142, 247, 0.3);
+}
+
+.device-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
+
+.status-dot--online {
+  background: var(--accent2);
+  box-shadow: 0 0 6px var(--accent2);
+}
+
+.device-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.device-imei,
+.device-location,
+.device-last-seen {
+  font-size: 11px;
+  color: var(--muted);
+  padding-left: 15px;
+  line-height: 1.8;
+}
+
+.sidebar-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-footer-text {
+  font-size: 11px;
+  color: var(--muted);
+}
