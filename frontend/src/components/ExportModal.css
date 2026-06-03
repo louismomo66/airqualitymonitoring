@@ -1,0 +1,133 @@
+/* Reuse modal-overlay + modal-close from DeviceEditModal.css */
+
+.export-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0;
+  width: 500px;
+  max-width: 96vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.export-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.export-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.export-modal-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Sections */
+.export-section {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.export-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.export-section-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.export-sel-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.export-sel-btn {
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.export-sel-btn:hover { color: var(--text); }
+
+.export-row-count {
+  font-size: 12px;
+  color: var(--accent);
+  margin: 6px 0 0;
+  font-weight: 600;
+}
+
+/* Column groups */
+.export-group {
+  margin-bottom: 14px;
+}
+
+.export-group-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.export-col-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+  padding-left: 22px;
+}
+
+.export-col-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.export-col-item input,
+.export-group-label input {
+  accent-color: var(--accent);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Actions */
+.export-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+}

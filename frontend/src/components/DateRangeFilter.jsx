@@ -2,17 +2,16 @@ import { useState } from "react";
 import "./DateRangeFilter.css";
 
 const PRESETS = [
-  { label: "1h",   hours: 1 },
-  { label: "6h",   hours: 6 },
-  { label: "24h",  hours: 24 },
-  { label: "7d",   hours: 168 },
-  { label: "30d",  hours: 720 },
-  { label: "All",  hours: null },
+  { label: "1h",  hours: 1 },
+  { label: "6h",  hours: 6 },
+  { label: "24h", hours: 24 },
+  { label: "7d",  hours: 168 },
+  { label: "30d", hours: 720 },
+  { label: "All", hours: null },
 ];
 
 function toLocalInput(isoString) {
   if (!isoString) return "";
-  // datetime-local needs "YYYY-MM-DDTHH:mm"
   return isoString.slice(0, 16);
 }
 
@@ -21,7 +20,7 @@ function toISO(localValue) {
   return new Date(localValue).toISOString();
 }
 
-export default function DateRangeFilter({ from, to, onChange }) {
+export default function DateRangeFilter({ from, to, onChange, compact = false }) {
   const [activePreset, setActivePreset] = useState("24h");
 
   function applyPreset(preset) {
@@ -29,24 +28,24 @@ export default function DateRangeFilter({ from, to, onChange }) {
     if (preset.hours === null) {
       onChange({ from: null, to: null });
     } else {
-      const now = new Date();
+      const now   = new Date();
       const start = new Date(now.getTime() - preset.hours * 3600 * 1000);
       onChange({ from: start.toISOString(), to: now.toISOString() });
     }
   }
 
-  function handleCustomFrom(e) {
+  function handleFrom(e) {
     setActivePreset(null);
     onChange({ from: toISO(e.target.value), to });
   }
 
-  function handleCustomTo(e) {
+  function handleTo(e) {
     setActivePreset(null);
     onChange({ from, to: toISO(e.target.value) });
   }
 
   return (
-    <div className="drf">
+    <div className={`drf ${compact ? "drf--compact" : ""}`}>
       <div className="drf-presets">
         {PRESETS.map((p) => (
           <button
@@ -64,14 +63,14 @@ export default function DateRangeFilter({ from, to, onChange }) {
         <input
           type="datetime-local"
           value={toLocalInput(from)}
-          onChange={handleCustomFrom}
+          onChange={handleFrom}
           className="drf-input"
         />
         <span className="drf-label">To</span>
         <input
           type="datetime-local"
           value={toLocalInput(to)}
-          onChange={handleCustomTo}
+          onChange={handleTo}
           className="drf-input"
         />
       </div>

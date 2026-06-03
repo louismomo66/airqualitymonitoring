@@ -4,36 +4,56 @@ import Dashboard from "./components/Dashboard";
 import { fetchDevices } from "./api";
 import "./App.css";
 
+// Dummy devices shown when the backend is unreachable
+const DUMMY_DEVICES = [
+  {
+    id: 1,
+    imei: "123456789012345",
+    name: "Demo Node — Kampala",
+    location: "Nakasero Hill",
+    registered_at: new Date(Date.now() - 7 * 86400_000).toISOString(),
+    last_seen: new Date(Date.now() - 4 * 60_000).toISOString(),
+  },
+  {
+    id: 2,
+    imei: "987654321098765",
+    name: "Demo Node — Entebbe",
+    location: "Airport Road",
+    registered_at: new Date(Date.now() - 3 * 86400_000).toISOString(),
+    last_seen: new Date(Date.now() - 18 * 60_000).toISOString(),
+  },
+];
+
 export default function App() {
-  const [devices, setDevices] = useState([]);
-  const [selectedImei, setSelectedImei] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [devices, setDevices]           = useState(DUMMY_DEVICES);
+  const [selectedImei, setSelectedImei] = useState(DUMMY_DEVICES[0].imei);
+  const [loading, setLoading]           = useState(false);
+  const [backendUp, setBackendUp]       = useState(false);
 
   const loadDevices = useCallback(async () => {
     try {
       const data = await fetchDevices();
-      setDevices(data);
-      // Auto-select first device
-      if (data.length > 0 && !selectedImei) {
-        setSelectedImei(data[0].imei);
+      if (Array.isArray(data)) {
+        setDevices(data.length > 0 ? data : DUMMY_DEVICES);
+        setSelectedImei((prev) => prev ?? (data[0] ?? DUMMY_DEVICES[0]).imei);
+        setBackendUp(true);
       }
-      setError(null);
-    } catch (e) {
-      setError("Cannot reach backend. Is it running?");
+    } catch (_) {
+      // Backend unreachable — keep showing dummy data silently
+      setBackendUp(false);
     } finally {
       setLoading(false);
     }
-  }, [selectedImei]);
+  }, []);
 
-  // Initial load + poll for new devices every 30 s
   useEffect(() => {
     loadDevices();
-    const interval = setInterval(loadDevices, 30_000);
-    return () => clearInterval(interval);
+    const iv = setInterval(loadDevices, 30_000);
+    return () => clearInterval(iv);
   }, [loadDevices]);
 
-  const selectedDevice = devices.find((d) => d.imei === selectedImei) || null;
+  const selectedDevice =
+    devices.find((d) => d.imei === selectedImei) ?? devices[0];
 
   return (
     <div className="app-layout">
@@ -42,18 +62,15 @@ export default function App() {
         selectedImei={selectedImei}
         onSelect={setSelectedImei}
         loading={loading}
+        backendUp={backendUp}
       />
       <main className="app-main">
-        {error && <div className="banner banner--error">{error}</div>}
-        {!loading && !selectedDevice && !error && (
-          <div className="empty-state">
-            <span className="empty-icon">📡</span>
-            <p>No devices registered yet.</p>
-            <p className="muted">Power on a node to auto-register it.</p>
-          </div>
-        )}
         {selectedDevice && (
-          <Dashboard device={selectedDevice} onDeviceUpdated={loadDevices} />
+          <Dashboard
+            device={selectedDevice}
+            onDeviceUpdated={loadDevices}
+            backendUp={backendUp}
+          />
         )}
       </main>
     </div>

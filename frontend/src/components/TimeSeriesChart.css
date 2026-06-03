@@ -1,0 +1,122 @@
+.ts-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px 16px;
+  margin-bottom: 24px;
+}
+
+.ts-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+/* Export buttons */
+.ts-export-btns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ts-export-btn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.ts-export-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ts-export-btn:disabled { opacity: 0.5; cursor: wait; }
+
+.ts-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ts-card-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Series toggles */
+.ts-toggles {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.ts-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ts-toggle:hover {
+  border-color: #475569;
+  color: var(--text);
+}
+
+.ts-toggle--on {
+  font-weight: 700;
+}
+
+.ts-toggle-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Tooltip */
+.ts-tooltip {
+  background: #1a1d27;
+  border: 1px solid #2e3248;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.8;
+  min-width: 140px;
+}
+
+.ts-tooltip-time {
+  color: #94a3b8;
+  font-size: 11px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #2e3248;
+  padding-bottom: 4px;
+}
+
+/* Empty state */
+.ts-empty {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+}

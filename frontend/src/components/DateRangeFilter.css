@@ -3,26 +3,34 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 24px;
-  padding: 14px 18px;
-  background: var(--surface);
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 8px;
+}
+
+/* Inside a chart card — no outer card bg, less padding */
+.drf--compact {
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  margin-bottom: 14px;
 }
 
 .drf-presets {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   flex-wrap: wrap;
 }
 
 .drf-preset {
-  padding: 4px 12px;
+  padding: 3px 11px;
   border-radius: 20px;
   border: 1px solid var(--border);
-  background: var(--surface2);
+  background: transparent;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
@@ -42,12 +50,12 @@
 .drf-custom {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .drf-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -58,9 +66,9 @@
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 5px 10px;
+  padding: 4px 8px;
   color: var(--text);
-  font-size: 12px;
+  font-size: 11px;
   outline: none;
   cursor: pointer;
   color-scheme: dark;

@@ -1,7 +1,7 @@
 import "./Sidebar.css";
 import { getAqiColor, getAqiLabel } from "../utils/aqi";
 
-export default function Sidebar({ devices, selectedImei, onSelect, loading }) {
+export default function Sidebar({ devices, selectedImei, onSelect, loading, backendUp }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
@@ -10,6 +10,12 @@ export default function Sidebar({ devices, selectedImei, onSelect, loading }) {
           <h1 className="sidebar-title">AQ Monitor</h1>
           <p className="sidebar-subtitle">Air Quality Network</p>
         </div>
+      </div>
+      <div className="sidebar-backend-status">
+        <span className={`status-dot ${backendUp ? "status-dot--online" : ""}`} />
+        <span className="sidebar-backend-label">
+          {backendUp ? "Backend connected" : "Demo mode"}
+        </span>
       </div>
 
       <div className="sidebar-section-label">Devices</div>

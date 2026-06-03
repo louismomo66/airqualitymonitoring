@@ -2,6 +2,7 @@
   max-width: 1100px;
 }
 
+/* ── Header ─────────────────────────────────────────────── */
 .dashboard-header {
   display: flex;
   align-items: flex-start;
@@ -33,6 +34,12 @@
   color: var(--muted);
 }
 
+.tag--warn {
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
 .btn-edit {
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -47,15 +54,45 @@
 
 .btn-edit:hover { background: var(--border); }
 
-/* Stat cards grid */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
-  margin-bottom: 32px;
+/* ── Tab bar ─────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
 }
 
-/* Sections */
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 10px 20px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  border-radius: 6px 6px 0 0;
+}
+
+.tab-btn:hover { color: var(--text); }
+
+.tab-btn--active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Stat cards ─────────────────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+/* ── Table section ──────────────────────────────────────── */
 .section {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -73,13 +110,33 @@
   gap: 12px;
 }
 
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-export {
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: rgba(79,142,247,0.1);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.btn-export:hover { background: rgba(79,142,247,0.2); }
+
 .section-title {
   font-size: 15px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
-
-.section-header .section-title { margin-bottom: 0; }
 
 .count-badge {
   background: var(--surface2);
@@ -89,9 +146,10 @@
   padding: 1px 8px;
   border-radius: 20px;
   color: var(--muted);
+  margin-left: 6px;
 }
 
-/* Pagination */
+/* ── Pagination ─────────────────────────────────────────── */
 .pagination {
   display: flex;
   align-items: center;
@@ -109,11 +167,7 @@
   transition: background 0.15s;
 }
 
-.btn-page:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
+.btn-page:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-page:not(:disabled):hover { background: var(--border); }
 
 .page-info {

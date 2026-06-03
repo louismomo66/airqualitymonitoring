@@ -1,0 +1,257 @@
+.analytics { max-width: 1100px; }
+
+/* ── Page header ─────────────────────────────────────────── */
+.an-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.an-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.an-sub {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.an-demo-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(245,158,11,0.4);
+  color: #f59e0b;
+  background: rgba(245,158,11,0.08);
+  margin-left: 8px;
+}
+
+.an-count {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  align-self: center;
+}
+
+/* ── Parameter selector ──────────────────────────────────── */
+.an-selector-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.an-selector-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.an-selector-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.an-param-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.an-param-btn:hover { color: var(--text); border-color: #475569; }
+.an-param-btn--active { font-weight: 700; }
+
+.an-param-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.an-param-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Impact summary cards ────────────────────────────────── */
+.an-impact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 600px) {
+  .an-impact-grid { grid-template-columns: 1fr; }
+}
+
+.an-impact-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+
+.an-impact-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--muted);
+}
+
+.an-impact-arrow { font-size: 16px; }
+
+.an-impact-env, .an-impact-pm { color: var(--text); }
+
+.an-impact-result {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.an-impact-sentence {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Regression insight box ──────────────────────────────── */
+.an-insight-box {
+  background: rgba(79,142,247,0.06);
+  border: 1px solid rgba(79,142,247,0.2);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.an-insight-box p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ── Overlay chart card ──────────────────────────────────── */
+.an-chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 22px;
+}
+
+.an-chart-header { margin-bottom: 16px; }
+
+.an-chart-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.an-chart-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.an-empty {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ── Tooltip ─────────────────────────────────────────────── */
+.an-tooltip {
+  background: #1a1d27;
+  border: 1px solid #2e3248;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.8;
+  min-width: 155px;
+}
+
+.an-tooltip-time {
+  color: #94a3b8;
+  font-size: 11px;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #2e3248;
+}
+
+/* ── "How to read" explainer ─────────────────────────────── */
+.an-explainer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.an-explainer-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+}
+
+.an-explainer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+.an-explainer-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.an-explainer-icon { font-size: 22px; flex-shrink: 0; }
+
+.an-explainer-item strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 3px;
+}
+
+.an-explainer-item p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}

@@ -32,6 +32,16 @@
   color: var(--muted);
 }
 
+.sidebar-backend-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 20px 6px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--muted);
+}
+
 .sidebar-section-label {
   padding: 16px 20px 8px;
   font-size: 11px;
