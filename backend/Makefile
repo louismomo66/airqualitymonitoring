@@ -9,7 +9,9 @@ MAIN       := ./cmd/server
 
 # Database / MQTT defaults (override on the command line or via .env)
 DATABASE_URL ?= postgres://aquser:aqpass@localhost:5433/airquality?sslmode=disable
-MQTT_BROKER  ?= tcp://localhost:1883
+MQTT_BROKER  ?= tcp://108.181.187.75:1883
+MQTT_USER    ?= mqttx
+MQTT_PASS    ?= pass@123
 MQTT_TOPIC   ?= airquality/data
 PORT         ?= 8081
 
@@ -33,18 +35,26 @@ build:
 # ── Run ──────────────────────────────────────────────────────
 ## Run the compiled binary (builds first if needed)
 run: build
+	@echo "🛑 Stopping Docker backend if running..."
+	@docker stop aq_backend 2>/dev/null || true
 	@echo "🚀 Starting server on :$(PORT)..."
 	DATABASE_URL="$(DATABASE_URL)" \
 	MQTT_BROKER="$(MQTT_BROKER)" \
+	MQTT_USER="$(MQTT_USER)" \
+	MQTT_PASS="$(MQTT_PASS)" \
 	MQTT_TOPIC="$(MQTT_TOPIC)" \
 	PORT="$(PORT)" \
 	$(BIN)
 
 ## Run directly with `go run` (no compile step — useful during dev)
 dev:
+	@echo "🛑 Stopping Docker backend if running..."
+	@docker stop aq_backend 2>/dev/null || true
 	@echo "🔄 Running with go run (dev mode)..."
 	DATABASE_URL="$(DATABASE_URL)" \
 	MQTT_BROKER="$(MQTT_BROKER)" \
+	MQTT_USER="$(MQTT_USER)" \
+	MQTT_PASS="$(MQTT_PASS)" \
 	MQTT_TOPIC="$(MQTT_TOPIC)" \
 	PORT="$(PORT)" \
 	go run $(MAIN)

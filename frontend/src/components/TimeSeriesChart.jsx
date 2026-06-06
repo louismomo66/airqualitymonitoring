@@ -48,17 +48,12 @@ function SeriesToggle({ series, active, onToggle }) {
 
 // ── Main ──────────────────────────────────────────────────────
 export default function TimeSeriesChart({
-  data = [], series = [], yUnit = "", title, subtitle,
+  data = [], series = [], yUnit = "", title, subtitle, loading = false,
 }) {
   const cardRef = useRef(null);
   const [active,    setActive]    = useState(() => series.map((s) => s.key));
-  const [dateRange, setDateRange] = useState(() => {
-    const now = new Date();
-    return {
-      from: new Date(now - 24 * 3600_000).toISOString(),
-      to:   now.toISOString(),
-    };
-  });
+  // Default to no date bounds so all data is always visible
+  const [dateRange, setDateRange] = useState({ from: null, to: null });
   const [exporting, setExporting] = useState(false);
 
   // Filter by date
@@ -136,7 +131,9 @@ export default function TimeSeriesChart({
       <DateRangeFilter from={dateRange.from} to={dateRange.to} onChange={setDateRange} compact />
 
       {/* Chart */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="ts-empty">⏳ Loading data…</div>
+      ) : filtered.length === 0 ? (
         <div className="ts-empty">No data in selected range</div>
       ) : (
         <ResponsiveContainer width="100%" height={240}>

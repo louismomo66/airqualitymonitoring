@@ -14,7 +14,7 @@ export default function Sidebar({ devices, selectedImei, onSelect, loading, back
       <div className="sidebar-backend-status">
         <span className={`status-dot ${backendUp ? "status-dot--online" : ""}`} />
         <span className="sidebar-backend-label">
-          {backendUp ? "Backend connected" : "Demo mode"}
+          {backendUp ? "Connected" : "Connecting…"}
         </span>
       </div>
 

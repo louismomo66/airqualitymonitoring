@@ -29,16 +29,17 @@ services:
     build: ./backend
     container_name: aq_backend
     depends_on:
-      - mosquitto
       - postgres
     environment:
       DATABASE_URL: postgres://aquser:aqpass@postgres:5432/airquality?sslmode=disable
-      MQTT_BROKER: tcp://mosquitto:1883
+      MQTT_BROKER: tcp://108.181.187.75:1883
+      MQTT_USER: mqttx
+      MQTT_PASS: "pass@123"
       MQTT_TOPIC: airquality/data
       PORT: "8080"
     ports:
       - "8080:8080"
-    restart: unless-stopped
+    restart: "no"
 
   frontend:
     build: ./frontend

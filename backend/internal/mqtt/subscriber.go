@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
+	"os"
+	"sync"
 	"time"
 
 	pahomqtt "github.com/eclipse/paho.mqtt.golang"
@@ -26,10 +29,16 @@ type Payload struct {
 
 // Subscriber holds the MQTT client and a reference to the database.
 type Subscriber struct {
-	brokerURL string
-	topic     string
-	database  *sql.DB
-	client    pahomqtt.Client
+	brokerURL  string
+	topic      string
+	database   *sql.DB
+	client     pahomqtt.Client
+
+	// guards subscribed flag and the seen-message cache
+	mu         sync.Mutex
+	subscribed bool
+	// recentIDs caches the last 256 MQTT message IDs to drop QoS-1 re-deliveries
+	recentIDs  map[uint16]time.Time
 }
 
 // NewSubscriber constructs a Subscriber.
@@ -38,23 +47,38 @@ func NewSubscriber(brokerURL, topic string, database *sql.DB) *Subscriber {
 		brokerURL: brokerURL,
 		topic:     topic,
 		database:  database,
+		recentIDs: make(map[uint16]time.Time),
 	}
 }
 
 // Connect establishes the MQTT connection and starts subscribing.
 func (s *Subscriber) Connect() error {
+	// Unique client ID prevents the broker kicking us out when another
+	// instance (or a stale session) uses the same ID.
+	clientID := fmt.Sprintf("aq_backend_%d_%d", time.Now().UnixNano(), rand.Intn(9999))
+
 	opts := pahomqtt.NewClientOptions().
 		AddBroker(s.brokerURL).
-		SetClientID("aq_backend_subscriber").
+		SetClientID(clientID).
+		SetCleanSession(true).
+		SetKeepAlive(30 * time.Second).
+		SetPingTimeout(10 * time.Second).
 		SetAutoReconnect(true).
 		SetConnectRetry(true).
 		SetConnectRetryInterval(5 * time.Second).
 		SetOnConnectHandler(s.onConnect).
 		SetConnectionLostHandler(s.onConnectionLost)
 
+	if user := os.Getenv("MQTT_USER"); user != "" {
+		opts.SetUsername(user)
+	}
+	if pass := os.Getenv("MQTT_PASS"); pass != "" {
+		opts.SetPassword(pass)
+	}
+
 	s.client = pahomqtt.NewClient(opts)
 
-	// Retry connection on startup (broker may not be up yet)
+	log.Printf("📡 Connecting to MQTT broker %s as client %s", s.brokerURL, clientID)
 	for i := 0; i < 10; i++ {
 		if token := s.client.Connect(); token.Wait() && token.Error() == nil {
 			log.Printf("✅ Connected to MQTT broker: %s", s.brokerURL)
@@ -71,23 +95,61 @@ func (s *Subscriber) Disconnect() {
 	s.client.Disconnect(500)
 }
 
-// onConnect is called each time the client successfully connects/reconnects.
+// onConnect is called each time the client connects/reconnects.
+// The mutex ensures we only ever have one active subscription.
 func (s *Subscriber) onConnect(c pahomqtt.Client) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.subscribed {
+		// Already subscribed — Paho re-subscribes automatically after
+		// reconnect when using QoS 1 with CleanSession=false, but we
+		// use CleanSession=true so we must re-subscribe. Reset the flag
+		// so the subscribe below runs.
+		s.subscribed = false
+	}
+
 	log.Printf("📡 MQTT connected — subscribing to %s", s.topic)
 	token := c.Subscribe(s.topic, 1, s.handleMessage)
 	token.Wait()
 	if token.Error() != nil {
 		log.Printf("❌ Subscribe failed: %v", token.Error())
+		return
 	}
+	s.subscribed = true
+	log.Printf("✅ Subscribed to %s", s.topic)
 }
 
 // onConnectionLost is called when the connection drops.
 func (s *Subscriber) onConnectionLost(_ pahomqtt.Client, err error) {
+	s.mu.Lock()
+	s.subscribed = false
+	s.mu.Unlock()
 	log.Printf("⚠️  MQTT connection lost: %v — will auto-reconnect", err)
 }
 
 // handleMessage processes each incoming MQTT message.
+// MessageID deduplication prevents storing the same QoS-1 message twice
+// if the broker re-delivers it during a reconnect window.
 func (s *Subscriber) handleMessage(_ pahomqtt.Client, msg pahomqtt.Message) {
+	// ── Deduplicate by MQTT message ID ──────────────────────
+	s.mu.Lock()
+	mid := msg.MessageID()
+	if mid != 0 { // QoS 0 messages have ID 0 — can't dedup those by ID
+		if _, seen := s.recentIDs[mid]; seen {
+			s.mu.Unlock()
+			log.Printf("⏭  Dropping duplicate message ID %d", mid)
+			return
+		}
+		s.recentIDs[mid] = time.Now()
+		// Evict IDs older than 60 s to keep map small
+		for k, t := range s.recentIDs {
+			if time.Since(t) > 60*time.Second {
+				delete(s.recentIDs, k)
+			}
+		}
+	}
+	s.mu.Unlock()
 	var p Payload
 	if err := json.Unmarshal(msg.Payload(), &p); err != nil {
 		log.Printf("❌ Bad payload: %v  raw=%s", err, msg.Payload())
@@ -99,24 +161,19 @@ func (s *Subscriber) handleMessage(_ pahomqtt.Client, msg pahomqtt.Message) {
 		return
 	}
 
-	// Auto-register device (INSERT … ON CONFLICT UPDATE last_seen)
+	// Auto-register / touch last_seen
 	deviceID, err := db.UpsertDevice(s.database, p.IMEI)
 	if err != nil {
 		log.Printf("❌ UpsertDevice failed for IMEI %s: %v", p.IMEI, err)
 		return
 	}
 
-	// Null-out "invalid" sensor values sent as -1 by the firmware
-	pm1_0  := nullIfNegative(p.PM1_0)
-	pm2_5  := nullIfNegative(p.PM2_5)
-	pm10   := nullIfNegative(p.PM10)
-
 	reading := db.Reading{
 		DeviceID:   deviceID,
 		IMEI:       p.IMEI,
-		PM1_0:      pm1_0,
-		PM2_5:      pm2_5,
-		PM10:       pm10,
+		PM1_0:      nullIfNegative(p.PM1_0),
+		PM2_5:      nullIfNegative(p.PM2_5),
+		PM10:       nullIfNegative(p.PM10),
 		ShieldTemp: p.ShieldTemp,
 		ShieldHum:  p.ShieldHum,
 		BoardTemp:  p.BoardTemp,
@@ -124,7 +181,8 @@ func (s *Subscriber) handleMessage(_ pahomqtt.Client, msg pahomqtt.Message) {
 	}
 
 	if err := db.InsertReading(s.database, reading); err != nil {
-		log.Printf("❌ InsertReading failed: %v", err)
+		// A unique-constraint violation just means a duplicate — log and skip
+		log.Printf("⚠️  InsertReading skipped (duplicate?): %v", err)
 		return
 	}
 

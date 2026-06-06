@@ -21,7 +21,8 @@ function toISO(localValue) {
 }
 
 export default function DateRangeFilter({ from, to, onChange, compact = false }) {
-  const [activePreset, setActivePreset] = useState("24h");
+  // Default to "All" so charts show all data immediately
+  const [activePreset, setActivePreset] = useState("All");
 
   function applyPreset(preset) {
     setActivePreset(preset.label);

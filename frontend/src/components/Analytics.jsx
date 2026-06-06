@@ -28,8 +28,7 @@ function fmtTime(ts) {
 }
 
 function defaultRange() {
-  const now = new Date();
-  return { from: new Date(now - 24*3600_000).toISOString(), to: now.toISOString() };
+  return { from: null, to: null };
 }
 
 // Plain-English sentence from r and two labels
@@ -98,7 +97,7 @@ function ImpactCard({ envLabel, envEmoji, pmLabel, r }) {
 }
 
 // ── Main component ───────────────────────────────────────────
-export default function Analytics({ data = [], useDummy }) {
+export default function Analytics({ data = [], loading = false }) {
   const [selectedParam, setSelectedParam] = useState("pm2_5");
   const [dateRange,     setDateRange]     = useState(defaultRange);
 
@@ -148,6 +147,14 @@ export default function Analytics({ data = [], useDummy }) {
 
   const n = filtered.length;
 
+  if (loading) {
+    return (
+      <div className="analytics">
+        <div className="an-loading">⏳ Loading readings…</div>
+      </div>
+    );
+  }
+
   return (
     <div className="analytics">
 
@@ -157,7 +164,6 @@ export default function Analytics({ data = [], useDummy }) {
           <h3 className="an-title">🌡️ How does weather affect air quality?</h3>
           <p className="an-sub">
             See how temperature and humidity influence the pollution level you select.
-            {useDummy && <span className="an-demo-badge"> ⚠ Demo data</span>}
           </p>
         </div>
         <span className="an-count">{n.toLocaleString()} readings</span>

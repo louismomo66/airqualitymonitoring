@@ -39,3 +39,13 @@
 .muted {
   color: var(--muted);
 }
+
+code {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 13px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--accent);
+}

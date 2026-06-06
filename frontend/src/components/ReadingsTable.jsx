@@ -1,4 +1,3 @@
-import { getAqiColor, getAqiLabel } from "../utils/aqi";
 import "./ReadingsTable.css";
 
 function fmtNum(v, d = 1) {
@@ -28,7 +27,6 @@ export default function ReadingsTable({ readings, loading }) {
             <th>PM1.0 (μg/m³)</th>
             <th>PM2.5 (μg/m³)</th>
             <th>PM10 (μg/m³)</th>
-            <th>AQI</th>
             <th>Shield Temp (°C)</th>
             <th>Shield Hum (%)</th>
             <th>Board Temp (°C)</th>
@@ -37,23 +35,12 @@ export default function ReadingsTable({ readings, loading }) {
         </thead>
         <tbody>
           {readings.map((r) => {
-            const aqi = r.pm2_5 != null ? getAqiLabel(r.pm2_5) : null;
-            const aqiColor = r.pm2_5 != null ? getAqiColor(r.pm2_5) : "#64748b";
             return (
               <tr key={r.id}>
                 <td className="mono">{fmtDate(r.received_at)}</td>
                 <td>{fmtNum(r.pm1_0)}</td>
                 <td>{fmtNum(r.pm2_5)}</td>
                 <td>{fmtNum(r.pm10)}</td>
-                <td>
-                  {aqi ? (
-                    <span className="aqi-badge" style={{ color: aqiColor, borderColor: aqiColor }}>
-                      {aqi}
-                    </span>
-                  ) : (
-                    <span className="null-val">—</span>
-                  )}
-                </td>
                 <td>{fmtNum(r.shield_temp, 2)}</td>
                 <td>{fmtNum(r.shield_hum, 2)}</td>
                 <td>{fmtNum(r.board_temp, 2)}</td>

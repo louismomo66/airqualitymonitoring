@@ -4,43 +4,26 @@ import Dashboard from "./components/Dashboard";
 import { fetchDevices } from "./api";
 import "./App.css";
 
-// Dummy devices shown when the backend is unreachable
-const DUMMY_DEVICES = [
-  {
-    id: 1,
-    imei: "123456789012345",
-    name: "Demo Node — Kampala",
-    location: "Nakasero Hill",
-    registered_at: new Date(Date.now() - 7 * 86400_000).toISOString(),
-    last_seen: new Date(Date.now() - 4 * 60_000).toISOString(),
-  },
-  {
-    id: 2,
-    imei: "987654321098765",
-    name: "Demo Node — Entebbe",
-    location: "Airport Road",
-    registered_at: new Date(Date.now() - 3 * 86400_000).toISOString(),
-    last_seen: new Date(Date.now() - 18 * 60_000).toISOString(),
-  },
-];
-
 export default function App() {
-  const [devices, setDevices]           = useState(DUMMY_DEVICES);
-  const [selectedImei, setSelectedImei] = useState(DUMMY_DEVICES[0].imei);
-  const [loading, setLoading]           = useState(false);
-  const [backendUp, setBackendUp]       = useState(false);
+  const [devices,      setDevices]      = useState([]);
+  const [selectedImei, setSelectedImei] = useState(null);
+  const [loading,      setLoading]      = useState(true);
+  const [backendUp,    setBackendUp]    = useState(false);
+  const [error,        setError]        = useState(null);
 
   const loadDevices = useCallback(async () => {
     try {
       const data = await fetchDevices();
       if (Array.isArray(data)) {
-        setDevices(data.length > 0 ? data : DUMMY_DEVICES);
-        setSelectedImei((prev) => prev ?? (data[0] ?? DUMMY_DEVICES[0]).imei);
+        setDevices(data);
+        // Auto-select first device if nothing is selected yet
+        setSelectedImei((prev) => prev ?? data[0]?.imei ?? null);
         setBackendUp(true);
+        setError(null);
       }
-    } catch (_) {
-      // Backend unreachable — keep showing dummy data silently
+    } catch (e) {
       setBackendUp(false);
+      setError("Cannot reach the backend. Make sure it is running.");
     } finally {
       setLoading(false);
     }
@@ -52,8 +35,7 @@ export default function App() {
     return () => clearInterval(iv);
   }, [loadDevices]);
 
-  const selectedDevice =
-    devices.find((d) => d.imei === selectedImei) ?? devices[0];
+  const selectedDevice = devices.find((d) => d.imei === selectedImei) ?? null;
 
   return (
     <div className="app-layout">
@@ -64,12 +46,33 @@ export default function App() {
         loading={loading}
         backendUp={backendUp}
       />
+
       <main className="app-main">
-        {selectedDevice && (
+        {/* Backend unreachable */}
+        {!backendUp && !loading && (
+          <div className="empty-state">
+            <span className="empty-icon">🔌</span>
+            <p>{error ?? "Connecting to backend…"}</p>
+            <p className="muted">
+              Run <code>make dev</code> in the backend folder, then refresh.
+            </p>
+          </div>
+        )}
+
+        {/* Backend up, no devices yet */}
+        {backendUp && !loading && devices.length === 0 && (
+          <div className="empty-state">
+            <span className="empty-icon">📡</span>
+            <p>No devices registered yet.</p>
+            <p className="muted">Power on a node — it will appear here automatically.</p>
+          </div>
+        )}
+
+        {/* Normal view */}
+        {backendUp && selectedDevice && (
           <Dashboard
             device={selectedDevice}
             onDeviceUpdated={loadDevices}
-            backendUp={backendUp}
           />
         )}
       </main>
