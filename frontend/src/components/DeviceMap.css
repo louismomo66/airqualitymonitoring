@@ -1,0 +1,132 @@
+.device-map-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 1100px;
+}
+
+.device-map-header {
+  margin-bottom: 16px;
+}
+
+.device-map-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.device-map-sub {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.leaflet-map {
+  height: 520px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Popup styles */
+.device-popup .leaflet-popup-content-wrapper {
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+.device-popup .leaflet-popup-content {
+  margin: 0;
+  min-width: 200px;
+}
+
+.dp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dp-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.dp-aqi {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+
+.dp-location, .dp-imei {
+  font-size: 11px;
+  color: #64748b;
+  padding: 4px 14px 0;
+}
+
+.dp-readings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 14px;
+}
+
+.dp-chip {
+  background: #f0f4f8;
+  border: 1px solid #d0d7e3;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: #475569;
+}
+
+.dp-chip strong {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.dp-no-data {
+  font-size: 12px;
+  color: #94a3b8;
+  padding: 8px 14px;
+}
+
+.dp-btn {
+  display: block;
+  width: calc(100% - 28px);
+  margin: 0 14px 12px;
+  padding: 7px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
+}
+
+.dp-btn:hover { background: #2563eb; }
+
+/* Empty state overlay */
+.device-map-empty {
+  margin-top: 16px;
+  text-align: center;
+  padding: 32px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.device-map-empty span { font-size: 36px; display: block; margin-bottom: 8px; }

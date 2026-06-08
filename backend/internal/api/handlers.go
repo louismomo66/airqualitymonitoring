@@ -62,13 +62,15 @@ func (h *Handler) GetDevice(w http.ResponseWriter, r *http.Request) {
 
 // UpdateDevice godoc
 // POST /api/devices/{imei}
-// Body: { "name": "...", "location": "..." }
+// Body: { "name": "...", "location": "...", "lat": 0.0, "lng": 0.0 }
 func (h *Handler) UpdateDevice(w http.ResponseWriter, r *http.Request) {
 	imei := mux.Vars(r)["imei"]
 
 	var body struct {
-		Name     *string `json:"name"`
-		Location *string `json:"location"`
+		Name     *string  `json:"name"`
+		Location *string  `json:"location"`
+		Lat      *float64 `json:"lat"`
+		Lng      *float64 `json:"lng"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		respond(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
@@ -76,9 +78,9 @@ func (h *Handler) UpdateDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := h.db.Exec(`
-		UPDATE devices SET name = $1, location = $2
-		WHERE imei = $3
-	`, body.Name, body.Location, imei)
+		UPDATE devices SET name = $1, location = $2, lat = $3, lng = $4
+		WHERE imei = $5
+	`, body.Name, body.Location, body.Lat, body.Lng, imei)
 	if err != nil {
 		respond(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return

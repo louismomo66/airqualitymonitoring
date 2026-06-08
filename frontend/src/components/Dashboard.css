@@ -54,36 +54,6 @@
 
 .btn-edit:hover { background: var(--border); }
 
-/* ── Tab bar ─────────────────────────────────────────────── */
-.tab-bar {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 28px;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0;
-}
-
-.tab-btn {
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  padding: 10px 20px;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-  border-radius: 6px 6px 0 0;
-}
-
-.tab-btn:hover { color: var(--text); }
-
-.tab-btn--active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-
 /* ── Stat cards ─────────────────────────────────────────── */
 .stat-grid {
   display: grid;

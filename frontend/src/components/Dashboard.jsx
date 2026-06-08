@@ -5,8 +5,8 @@ import TimeSeriesChart from "./TimeSeriesChart";
 import ReadingsTable from "./ReadingsTable";
 import DeviceEditModal from "./DeviceEditModal";
 import ExportModal from "./ExportModal";
-import Analytics from "./Analytics";
 import { getAqiLabel, getAqiColor } from "../utils/aqi";
+import { generateDummyReadings } from "../utils/dummyData";
 import "./Dashboard.css";
 
 const POLL_INTERVAL = 30_000;
@@ -26,10 +26,10 @@ const PM_SERIES = [
 ];
 
 const ENV_SERIES = [
-  { key: "shield_temp", label: "Shield Temp", color: "#34d399", unit: "°C" },
-  { key: "shield_hum",  label: "Shield Hum",  color: "#818cf8", unit: "%"  },
-  { key: "board_temp",  label: "Board Temp",  color: "#fb923c", unit: "°C" },
-  { key: "board_hum",   label: "Board Hum",   color: "#a78bfa", unit: "%"  },
+  { key: "shield_temp", label: "Shield Temp", color: "#e85d04", unit: "°C", yAxisId: "temp" },
+  { key: "board_temp",  label: "Board Temp",  color: "#f48c06", unit: "°C", yAxisId: "temp" },
+  { key: "shield_hum",  label: "Shield Hum",  color: "#0096c7", unit: "%",  yAxisId: "hum"  },
+  { key: "board_hum",   label: "Board Hum",   color: "#48cae4", unit: "%",  yAxisId: "hum"  },
 ];
 
 function fmtTime(ts) {
@@ -45,7 +45,6 @@ function toChartData(readings) {
   return readings.map((r) => ({
     time:        fmtTime(r.received_at),
     rawTime:     r.received_at,
-    // keep received_at so ExportModal can filter by date
     received_at: r.received_at,
     imei:        r.imei,
     pm1_0:       r.pm1_0,
@@ -58,71 +57,69 @@ function toChartData(readings) {
   }));
 }
 
-export default function Dashboard({ device, onDeviceUpdated }) {
-  const [tab,           setTab]           = useState("overview");
+const DUMMY_READINGS = generateDummyReadings(288);
+const DUMMY_CHART    = toChartData(DUMMY_READINGS);
+const DUMMY_TABLE    = [...DUMMY_READINGS].reverse().slice(0, 50);
+
+export default function Dashboard({ device, onDeviceUpdated, backendUp = false }) {
   const [latest,        setLatest]        = useState(null);
-  const [chartData,     setChartData]     = useState([]);
-  const [tableReadings, setTableReadings] = useState([]);
-  const [tableTotal,    setTableTotal]    = useState(0);
+  const [chartData,     setChartData]     = useState(DUMMY_CHART);
+  const [tableReadings, setTableReadings] = useState(DUMMY_TABLE);
+  const [tableTotal,    setTableTotal]    = useState(DUMMY_READINGS.length);
   const [tablePage,     setTablePage]     = useState(0);
-  const [loadingLatest, setLoadingLatest] = useState(true);
-  const [loadingChart,  setLoadingChart]  = useState(true);
-  const [loadingTable,  setLoadingTable]  = useState(true);
+  const [loadingLatest, setLoadingLatest] = useState(false);
+  const [loadingChart,  setLoadingChart]  = useState(false);
+  const [loadingTable,  setLoadingTable]  = useState(false);
   const [editOpen,      setEditOpen]      = useState(false);
   const [exportOpen,    setExportOpen]    = useState(false);
+  const [useDummy,      setUseDummy]      = useState(true);
 
-  // ── Latest reading (KPI tiles) ───────────────────────────
   const loadLatest = useCallback(async () => {
+    if (!backendUp) return;
     setLoadingLatest(true);
     try {
       const data = await fetchLatestReading(device.imei);
-      setLatest(data ?? null);
-    } catch (_) {
-      setLatest(null);
-    } finally {
-      setLoadingLatest(false);
-    }
-  }, [device.imei]);
+      if (data) { setLatest(data); setUseDummy(false); }
+    } catch (_) {}
+    setLoadingLatest(false);
+  }, [device.imei, backendUp]);
 
-  // ── Chart data ───────────────────────────────────────────
   const loadChart = useCallback(async () => {
+    if (!backendUp) return;
     setLoadingChart(true);
     try {
       const data = await fetchReadings(device.imei, CHART_LIMIT, 0);
-      setChartData(toChartData(data?.readings ?? []));
-    } catch (_) {
-      setChartData([]);
-    } finally {
-      setLoadingChart(false);
-    }
-  }, [device.imei]);
+      if (data?.readings?.length) {
+        setChartData(toChartData(data.readings));
+        setUseDummy(false);
+      }
+    } catch (_) {}
+    setLoadingChart(false);
+  }, [device.imei, backendUp]);
 
-  // ── Table (paginated) ────────────────────────────────────
   const loadTable = useCallback(async () => {
+    if (!backendUp) return;
     setLoadingTable(true);
     try {
       const data = await fetchReadings(device.imei, TABLE_LIMIT, tablePage * TABLE_LIMIT);
-      setTableReadings(data?.readings ?? []);
-      setTableTotal(data?.total ?? 0);
-    } catch (_) {
-      setTableReadings([]);
-      setTableTotal(0);
-    } finally {
-      setLoadingTable(false);
-    }
-  }, [device.imei, tablePage]);
+      if (data?.readings?.length) {
+        setTableReadings(data.readings);
+        setTableTotal(data.total ?? 0);
+        setUseDummy(false);
+      }
+    } catch (_) {}
+    setLoadingTable(false);
+  }, [device.imei, tablePage, backendUp]);
 
-  // Reset everything when the selected device changes
   useEffect(() => {
-    setTab("overview");
     setTablePage(0);
     setLatest(null);
-    setChartData([]);
-    setTableReadings([]);
-    setTableTotal(0);
+    setChartData(DUMMY_CHART);
+    setTableReadings(DUMMY_TABLE);
+    setTableTotal(DUMMY_READINGS.length);
+    setUseDummy(true);
   }, [device.imei]);
 
-  // Initial load + polling
   useEffect(() => {
     loadLatest();
     loadChart();
@@ -132,15 +129,15 @@ export default function Dashboard({ device, onDeviceUpdated }) {
 
   useEffect(() => { loadTable(); }, [loadTable]);
 
-  // ── Derived values ───────────────────────────────────────
   const displayName = device.name || `Node ${device.imei.slice(-6)}`;
-  const aqiLabel    = latest?.pm2_5 != null ? getAqiLabel(latest.pm2_5) : null;
-  const aqiColor    = latest?.pm2_5 != null ? getAqiColor(latest.pm2_5) : "#64748b";
+  const kpi         = latest ?? DUMMY_CHART.at(-1);
+  const aqiLabel    = kpi?.pm2_5 != null ? getAqiLabel(kpi.pm2_5) : null;
+  const aqiColor    = kpi?.pm2_5 != null ? getAqiColor(kpi.pm2_5) : "#64748b";
 
   return (
     <div className="dashboard">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="dashboard-header">
         <div className="dashboard-title-group">
           <h2 className="dashboard-title">{displayName}</h2>
@@ -152,90 +149,62 @@ export default function Dashboard({ device, onDeviceUpdated }) {
                 {aqiLabel}
               </span>
             )}
+            {useDummy && <span className="tag tag--warn">⚠ Demo data</span>}
           </div>
         </div>
         <button className="btn-edit" onClick={() => setEditOpen(true)}>✏️ Edit Device</button>
       </div>
 
-      {/* ── Tab bar ── */}
-      <div className="tab-bar">
-        <button
-          className={`tab-btn ${tab === "overview" ? "tab-btn--active" : ""}`}
-          onClick={() => setTab("overview")}
-        >
-          📊 Overview
-        </button>
-        <button
-          className={`tab-btn ${tab === "analytics" ? "tab-btn--active" : ""}`}
-          onClick={() => setTab("analytics")}
-        >
-          🔬 Analytics
-        </button>
+      {/* KPI tiles */}
+      <div className="stat-grid">
+        <StatCard label="PM1.0"       value={kpi?.pm1_0}       unit="μg/m³" icon="🔵" loading={loadingLatest} />
+        <StatCard label="PM2.5"       value={kpi?.pm2_5}       unit="μg/m³" icon="🟡" loading={loadingLatest} color={aqiColor} />
+        <StatCard label="PM10"        value={kpi?.pm10}        unit="μg/m³" icon="🔴" loading={loadingLatest} />
+        <StatCard label="Shield Temp" value={kpi?.shield_temp} unit="°C"    icon="🌡️" loading={loadingLatest} />
+        <StatCard label="Shield Hum"  value={kpi?.shield_hum}  unit="%"     icon="💧" loading={loadingLatest} />
+        <StatCard label="Board Temp"  value={kpi?.board_temp}  unit="°C"    icon="🔧" loading={loadingLatest} />
       </div>
 
-      {/* ══ ANALYTICS TAB ══ */}
-      {tab === "analytics" && (
-        <Analytics data={chartData} loading={loadingChart} />
-      )}
+      {/* Air quality chart */}
+      <TimeSeriesChart
+        title="Air Quality — Particulate Matter"
+        subtitle="PM1.0 · PM2.5 · PM10 — toggle series, drag brush to pan"
+        data={chartData}
+        series={PM_SERIES}
+        yUnit="μg/m³"
+        loading={loadingChart && !useDummy}
+      />
 
-      {/* ══ OVERVIEW TAB ══ */}
-      {tab === "overview" && (
-        <>
-          {/* KPI tiles */}
-          <div className="stat-grid">
-            <StatCard label="PM1.0"       value={latest?.pm1_0}       unit="μg/m³" icon="🔵" loading={loadingLatest} />
-            <StatCard label="PM2.5"       value={latest?.pm2_5}       unit="μg/m³" icon="🟡" loading={loadingLatest} color={aqiColor} />
-            <StatCard label="PM10"        value={latest?.pm10}        unit="μg/m³" icon="🔴" loading={loadingLatest} />
-            <StatCard label="Shield Temp" value={latest?.shield_temp} unit="°C"    icon="🌡️" loading={loadingLatest} />
-            <StatCard label="Shield Hum"  value={latest?.shield_hum}  unit="%"     icon="💧" loading={loadingLatest} />
-            <StatCard label="Board Temp"  value={latest?.board_temp}  unit="°C"    icon="🔧" loading={loadingLatest} />
-          </div>
+      {/* Temp & humidity chart */}
+      <TimeSeriesChart
+        title="Temperature & Humidity"
+        subtitle="Temperature (left axis °C) · Humidity (right axis %) — toggle series, drag brush to pan"
+        data={chartData}
+        series={ENV_SERIES}
+        yUnit=""
+        dualAxis
+        loading={loadingChart && !useDummy}
+      />
 
-          {/* Air quality time-series */}
-          <TimeSeriesChart
-            title="Air Quality — Particulate Matter"
-            subtitle="PM1.0 · PM2.5 · PM10 — toggle series, drag brush to pan"
-            data={chartData}
-            series={PM_SERIES}
-            yUnit="μg/m³"
-            loading={loadingChart}
-          />
-
-          {/* Temp & humidity time-series */}
-          <TimeSeriesChart
-            title="Temperature & Humidity"
-            subtitle="Shield and board sensors — toggle series, drag brush to pan"
-            data={chartData}
-            series={ENV_SERIES}
-            yUnit=""
-            loading={loadingChart}
-          />
-
-          {/* Readings table */}
-          <div className="section">
-            <div className="section-header">
-              <h3 className="section-title">
-                Readings <span className="count-badge">{tableTotal.toLocaleString()}</span>
-              </h3>
-              <div className="section-header-actions">
-                <button
-                  className="btn-export"
-                  onClick={() => setExportOpen(true)}
-                  disabled={chartData.length === 0}
-                >
-                  ⬇ Export
-                </button>
-                <div className="pagination">
-                  <button className="btn-page" disabled={tablePage === 0} onClick={() => setTablePage((p) => p - 1)}>← Prev</button>
-                  <span className="page-info">Page {tablePage + 1} / {Math.max(1, Math.ceil(tableTotal / TABLE_LIMIT))}</span>
-                  <button className="btn-page" disabled={(tablePage + 1) * TABLE_LIMIT >= tableTotal} onClick={() => setTablePage((p) => p + 1)}>Next →</button>
-                </div>
-              </div>
+      {/* Readings table */}
+      <div className="section">
+        <div className="section-header">
+          <h3 className="section-title">
+            Readings <span className="count-badge">{tableTotal.toLocaleString()}</span>
+          </h3>
+          <div className="section-header-actions">
+            <button className="btn-export" onClick={() => setExportOpen(true)}>
+              ⬇ Export
+            </button>
+            <div className="pagination">
+              <button className="btn-page" disabled={tablePage === 0} onClick={() => setTablePage((p) => p - 1)}>← Prev</button>
+              <span className="page-info">Page {tablePage + 1} / {Math.max(1, Math.ceil(tableTotal / TABLE_LIMIT))}</span>
+              <button className="btn-page" disabled={(tablePage + 1) * TABLE_LIMIT >= tableTotal} onClick={() => setTablePage((p) => p + 1)}>Next →</button>
             </div>
-            <ReadingsTable readings={tableReadings} loading={loadingTable} />
           </div>
-        </>
-      )}
+        </div>
+        <ReadingsTable readings={tableReadings} loading={loadingTable && !useDummy} />
+      </div>
 
       {editOpen && (
         <DeviceEditModal

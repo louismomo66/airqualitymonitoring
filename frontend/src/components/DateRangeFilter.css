@@ -71,7 +71,7 @@
   font-size: 11px;
   outline: none;
   cursor: pointer;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .drf-input:focus {

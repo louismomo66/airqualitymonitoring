@@ -12,6 +12,8 @@ type Device struct {
 	IMEI         string    `json:"imei"`
 	Name         *string   `json:"name"`
 	Location     *string   `json:"location"`
+	Lat          *float64  `json:"lat"`
+	Lng          *float64  `json:"lng"`
 	RegisteredAt time.Time `json:"registered_at"`
 	LastSeen     time.Time `json:"last_seen"`
 }
@@ -69,7 +71,7 @@ func InsertReading(db *sql.DB, r Reading) error {
 // ListDevices returns all registered devices ordered by last seen.
 func ListDevices(db *sql.DB) ([]Device, error) {
 	rows, err := db.Query(`
-		SELECT id, imei, name, location, registered_at, last_seen
+		SELECT id, imei, name, location, lat, lng, registered_at, last_seen
 		FROM devices
 		ORDER BY last_seen DESC
 	`)
@@ -82,7 +84,7 @@ func ListDevices(db *sql.DB) ([]Device, error) {
 	for rows.Next() {
 		var d Device
 		if err := rows.Scan(
-			&d.ID, &d.IMEI, &d.Name, &d.Location,
+			&d.ID, &d.IMEI, &d.Name, &d.Location, &d.Lat, &d.Lng,
 			&d.RegisteredAt, &d.LastSeen,
 		); err != nil {
 			return nil, err
@@ -96,9 +98,9 @@ func ListDevices(db *sql.DB) ([]Device, error) {
 func GetDevice(db *sql.DB, imei string) (*Device, error) {
 	var d Device
 	err := db.QueryRow(`
-		SELECT id, imei, name, location, registered_at, last_seen
+		SELECT id, imei, name, location, lat, lng, registered_at, last_seen
 		FROM devices WHERE imei = $1
-	`, imei).Scan(&d.ID, &d.IMEI, &d.Name, &d.Location, &d.RegisteredAt, &d.LastSeen)
+	`, imei).Scan(&d.ID, &d.IMEI, &d.Name, &d.Location, &d.Lat, &d.Lng, &d.RegisteredAt, &d.LastSeen)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}

@@ -46,8 +46,10 @@ func Migrate(db *sql.DB) error {
 	CREATE TABLE IF NOT EXISTS devices (
 		id         SERIAL PRIMARY KEY,
 		imei       VARCHAR(20) UNIQUE NOT NULL,
-		name       VARCHAR(100),           -- optional friendly name
-		location   VARCHAR(200),           -- optional location label
+		name       VARCHAR(100),
+		location   VARCHAR(200),
+		lat        DOUBLE PRECISION,
+		lng        DOUBLE PRECISION,
 		registered_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 		last_seen  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 	);
@@ -67,7 +69,9 @@ func Migrate(db *sql.DB) error {
 		received_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 	);
 
-	CREATE INDEX IF NOT EXISTS idx_readings_device_id   ON readings(device_id);
+	-- Add lat/lng to existing tables (safe to run repeatedly)
+	ALTER TABLE devices ADD COLUMN IF NOT EXISTS lat DOUBLE PRECISION;
+	ALTER TABLE devices ADD COLUMN IF NOT EXISTS lng DOUBLE PRECISION;
 	CREATE INDEX IF NOT EXISTS idx_readings_received_at ON readings(received_at DESC);
 	CREATE INDEX IF NOT EXISTS idx_readings_imei        ON readings(imei);
 	`

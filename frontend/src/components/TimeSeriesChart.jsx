@@ -37,7 +37,7 @@ function SeriesToggle({ series, active, onToggle }) {
             style={on ? { borderColor: s.color, color: s.color, background: `${s.color}18` } : {}}
             onClick={() => onToggle(s.key)}
           >
-            <span className="ts-toggle-dot" style={{ background: on ? s.color : "#475569" }} />
+            <span className="ts-toggle-dot" style={{ background: on ? s.color : "#94a3b8" }} />
             {s.label}
           </button>
         );
@@ -47,16 +47,25 @@ function SeriesToggle({ series, active, onToggle }) {
 }
 
 // ── Main ──────────────────────────────────────────────────────
+/**
+ * Props:
+ *   data      – chart points
+ *   series    – [{ key, label, color, unit, yAxisId?, referenceLines? }]
+ *   yUnit     – fallback unit for single-axis mode
+ *   dualAxis  – if true, uses series[].yAxisId ("left"|"right" or any two IDs)
+ *   title / subtitle
+ *   loading
+ */
 export default function TimeSeriesChart({
-  data = [], series = [], yUnit = "", title, subtitle, loading = false,
+  data = [], series = [], yUnit = "", dualAxis = false,
+  title, subtitle, loading = false,
 }) {
   const cardRef = useRef(null);
   const [active,    setActive]    = useState(() => series.map((s) => s.key));
-  // Default to no date bounds so all data is always visible
   const [dateRange, setDateRange] = useState({ from: null, to: null });
   const [exporting, setExporting] = useState(false);
 
-  // Filter by date
+  // Filter by date range
   const filtered = useMemo(() => {
     if (!data.length) return [];
     const from = dateRange.from ? new Date(dateRange.from).getTime() : null;
@@ -77,19 +86,16 @@ export default function TimeSeriesChart({
     );
   }
 
-  // ── PNG export ───────────────────────────────────────────
   async function handleExportPng() {
     if (!cardRef.current) return;
     setExporting(true);
     try {
-      const safeName = title.replace(/[^a-z0-9]/gi, "_").toLowerCase();
-      await exportPng(cardRef.current, safeName);
+      await exportPng(cardRef.current, title.replace(/[^a-z0-9]/gi, "_").toLowerCase());
     } finally {
       setExporting(false);
     }
   }
 
-  // ── CSV export — only active series, current date filter ─
   function handleExportCsv() {
     const activeSeries = series.filter((s) => active.includes(s.key));
     const columns = ["time", ...activeSeries.map((s) => s.key)];
@@ -97,28 +103,45 @@ export default function TimeSeriesChart({
       time: "Timestamp",
       ...Object.fromEntries(activeSeries.map((s) => [s.key, `${s.label} (${s.unit || yUnit})`])),
     };
-    const safeName = title.replace(/[^a-z0-9]/gi, "_").toLowerCase();
-    exportCsv(filtered, columns, headers, safeName);
+    exportCsv(filtered, columns, headers, title.replace(/[^a-z0-9]/gi, "_").toLowerCase());
   }
 
   const refLines = series
     .filter((s) => active.includes(s.key) && s.referenceLines)
     .flatMap((s) => s.referenceLines);
 
+  // In dual-axis mode collect the two unique axis IDs
+  const axisIds = dualAxis
+    ? [...new Set(series.map((s) => s.yAxisId).filter(Boolean))]
+    : [];
+  const leftAxisId  = axisIds[0] ?? "left";
+  const rightAxisId = axisIds[1] ?? "right";
+
+  // Tick / axis label colours that work on the light theme
+  const axisTickColor  = "#64748b";
+  const gridColor      = "#e2e8f0";
+  const brushBg        = "#f0f4f8";
+  const brushStroke    = "#c8d0e0";
+
+  // Find a representative colour for each axis (first active series on that axis)
+  const leftColor  = series.find((s) => active.includes(s.key) && s.yAxisId === leftAxisId)?.color  ?? axisTickColor;
+  const rightColor = series.find((s) => active.includes(s.key) && s.yAxisId === rightAxisId)?.color ?? axisTickColor;
+
+  // Unit label for each axis
+  const leftUnit  = series.find((s) => s.yAxisId === leftAxisId)?.unit  ?? yUnit;
+  const rightUnit = series.find((s) => s.yAxisId === rightAxisId)?.unit ?? "";
+
   return (
     <div className="ts-card" ref={cardRef}>
-      {/* Header row */}
+      {/* Header */}
       <div className="ts-card-header">
         <div>
           <div className="ts-card-title">{title}</div>
           {subtitle && <div className="ts-card-sub">{subtitle}</div>}
         </div>
-        {/* Export buttons */}
         <div className="ts-export-btns">
-          <button className="ts-export-btn" onClick={handleExportCsv} title="Export visible data as CSV">
-            ⬇ CSV
-          </button>
-          <button className="ts-export-btn" onClick={handleExportPng} disabled={exporting} title="Save chart as PNG">
+          <button className="ts-export-btn" onClick={handleExportCsv} title="Export CSV">⬇ CSV</button>
+          <button className="ts-export-btn" onClick={handleExportPng} disabled={exporting} title="Save PNG">
             {exporting ? "…" : "🖼 PNG"}
           </button>
         </div>
@@ -127,7 +150,7 @@ export default function TimeSeriesChart({
       {/* Series toggles */}
       <SeriesToggle series={series} active={active} onToggle={toggleSeries} />
 
-      {/* Per-chart date filter */}
+      {/* Date filter */}
       <DateRangeFilter from={dateRange.from} to={dateRange.to} onChange={setDateRange} compact />
 
       {/* Chart */}
@@ -136,30 +159,61 @@ export default function TimeSeriesChart({
       ) : filtered.length === 0 ? (
         <div className="ts-empty">No data in selected range</div>
       ) : (
-        <ResponsiveContainer width="100%" height={240}>
-          <ComposedChart data={filtered} margin={{ top: 6, right: 20, left: -4, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e2235" vertical={false} />
+        <ResponsiveContainer width="100%" height={260}>
+          <ComposedChart
+            data={filtered}
+            margin={{ top: 8, right: dualAxis ? 56 : 20, left: -4, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
             <XAxis
               dataKey="time"
-              tick={{ fill: "#64748b", fontSize: 10 }}
+              tick={{ fill: axisTickColor, fontSize: 10 }}
               tickLine={false}
-              axisLine={false}
+              axisLine={{ stroke: gridColor }}
               interval="preserveStartEnd"
               minTickGap={55}
             />
-            <YAxis
-              tick={{ fill: "#64748b", fontSize: 10 }}
-              tickLine={false}
-              axisLine={false}
-              unit={yUnit ? ` ${yUnit}` : ""}
-              width={54}
-            />
+
+            {dualAxis ? (
+              <>
+                {/* Left axis — temperature */}
+                <YAxis
+                  yAxisId={leftAxisId}
+                  orientation="left"
+                  tick={{ fill: leftColor, fontSize: 10 }}
+                  tickLine={false}
+                  axisLine={false}
+                  unit={` ${leftUnit}`}
+                  width={50}
+                />
+                {/* Right axis — humidity */}
+                <YAxis
+                  yAxisId={rightAxisId}
+                  orientation="right"
+                  tick={{ fill: rightColor, fontSize: 10 }}
+                  tickLine={false}
+                  axisLine={false}
+                  unit={` ${rightUnit}`}
+                  width={44}
+                />
+              </>
+            ) : (
+              <YAxis
+                tick={{ fill: axisTickColor, fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+                unit={yUnit ? ` ${yUnit}` : ""}
+                width={54}
+              />
+            )}
+
             <Tooltip content={<CustomTooltip />} />
 
             {refLines.map((rl) => (
               <ReferenceLine
                 key={`${rl.label}-${rl.value}`}
                 y={rl.value}
+                yAxisId={dualAxis ? leftAxisId : undefined}
                 stroke={rl.color || "#f59e0b"}
                 strokeDasharray="4 3"
                 label={{ value: rl.label, fill: rl.color || "#f59e0b", fontSize: 10, position: "insideTopRight" }}
@@ -170,6 +224,7 @@ export default function TimeSeriesChart({
               active.includes(s.key) ? (
                 <Line
                   key={s.key}
+                  yAxisId={dualAxis ? (s.yAxisId ?? leftAxisId) : undefined}
                   type="monotone"
                   dataKey={s.key}
                   name={s.label}
@@ -186,9 +241,9 @@ export default function TimeSeriesChart({
 
             <Brush
               dataKey="time"
-              height={24}
-              stroke="#2e3248"
-              fill="#0f1117"
+              height={22}
+              stroke={brushStroke}
+              fill={brushBg}
               travellerWidth={8}
               tickFormatter={() => ""}
             />

@@ -3,19 +3,34 @@ import { updateDevice } from "../api";
 import "./DeviceEditModal.css";
 
 export default function DeviceEditModal({ device, onClose, onSaved }) {
-  const [name, setName] = useState(device.name || "");
+  const [name,     setName]     = useState(device.name     || "");
   const [location, setLocation] = useState(device.location || "");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
+  const [lat,      setLat]      = useState(device.lat  != null ? String(device.lat)  : "");
+  const [lng,      setLng]      = useState(device.lng  != null ? String(device.lng)  : "");
+  const [saving,   setSaving]   = useState(false);
+  const [error,    setError]    = useState(null);
 
   async function handleSave(e) {
     e.preventDefault();
     setSaving(true);
     setError(null);
+
+    const parsedLat = lat.trim() !== "" ? parseFloat(lat) : null;
+    const parsedLng = lng.trim() !== "" ? parseFloat(lng) : null;
+
+    if ((lat.trim() !== "" && isNaN(parsedLat)) ||
+        (lng.trim() !== "" && isNaN(parsedLng))) {
+      setError("Latitude and longitude must be valid numbers.");
+      setSaving(false);
+      return;
+    }
+
     try {
       await updateDevice(device.imei, {
-        name: name.trim() || null,
+        name:     name.trim()     || null,
         location: location.trim() || null,
+        lat:      parsedLat,
+        lng:      parsedLng,
       });
       onSaved();
     } catch (err) {
@@ -48,7 +63,7 @@ export default function DeviceEditModal({ device, onClose, onSaved }) {
           </div>
 
           <div className="form-group">
-            <label>Location</label>
+            <label>Location Label</label>
             <input
               type="text"
               value={location}
@@ -57,12 +72,33 @@ export default function DeviceEditModal({ device, onClose, onSaved }) {
             />
           </div>
 
+          <div className="form-row">
+            <div className="form-group">
+              <label>Latitude</label>
+              <input
+                type="number"
+                step="any"
+                value={lat}
+                onChange={(e) => setLat(e.target.value)}
+                placeholder="e.g. 0.3476"
+              />
+            </div>
+            <div className="form-group">
+              <label>Longitude</label>
+              <input
+                type="number"
+                step="any"
+                value={lng}
+                onChange={(e) => setLng(e.target.value)}
+                placeholder="e.g. 32.5825"
+              />
+            </div>
+          </div>
+
           {error && <div className="form-error">{error}</div>}
 
           <div className="modal-actions">
-            <button type="button" className="btn-cancel" onClick={onClose}>
-              Cancel
-            </button>
+            <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn-save" disabled={saving}>
               {saving ? "Saving…" : "Save"}
             </button>

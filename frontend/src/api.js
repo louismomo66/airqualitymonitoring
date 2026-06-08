@@ -12,11 +12,11 @@ export async function fetchDevice(imei) {
   return res.json();
 }
 
-export async function updateDevice(imei, { name, location }) {
+export async function updateDevice(imei, { name, location, lat, lng }) {
   const res = await fetch(`${BASE}/devices/${imei}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, location }),
+    body: JSON.stringify({ name, location, lat, lng }),
   });
   if (!res.ok) throw new Error("Failed to update device");
   return res.json();
