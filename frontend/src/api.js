@@ -37,3 +37,19 @@ export async function fetchLatestReading(imei) {
   if (!res.ok) throw new Error("Failed to fetch latest reading");
   return res.json();
 }
+
+export async function fetchWeatherReadings(imei, limit = 500, offset = 0, from = null, to = null) {
+  let url = `${BASE}/devices/${imei}/weather?limit=${limit}&offset=${offset}`;
+  if (from) url += `&from=${encodeURIComponent(from)}`;
+  if (to)   url += `&to=${encodeURIComponent(to)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch weather readings");
+  return res.json();
+}
+
+export async function fetchLatestWeatherReading(imei) {
+  const res = await fetch(`${BASE}/devices/${imei}/weather/latest`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Failed to fetch latest weather reading");
+  return res.json();
+}

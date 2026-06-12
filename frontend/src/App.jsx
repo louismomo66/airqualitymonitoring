@@ -1,50 +1,31 @@
 import { useState, useEffect, useCallback } from "react";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
+import WeatherDashboard from "./components/WeatherDashboard";
 import DeviceMap from "./components/DeviceMap";
 import { fetchDevices } from "./api";
 import "./App.css";
 
-const DUMMY_DEVICES = [
-  {
-    id: 1,
-    imei: "000000000000000",
-    name: "Demo Node — Kampala",
-    location: "Nakasero Hill",
-    lat: 0.3476,
-    lng: 32.5825,
-    registered_at: new Date(Date.now() - 7 * 86400_000).toISOString(),
-    last_seen:     new Date(Date.now() - 4 * 60_000).toISOString(),
-  },
-  {
-    id: 2,
-    imei: "000000000000001",
-    name: "Demo Node — Entebbe",
-    location: "Airport Road",
-    lat: 0.0512,
-    lng: 32.4432,
-    registered_at: new Date(Date.now() - 3 * 86400_000).toISOString(),
-    last_seen:     new Date(Date.now() - 18 * 60_000).toISOString(),
-  },
-];
-
 export default function App() {
-  const [devices,      setDevices]      = useState(DUMMY_DEVICES);
-  const [selectedImei, setSelectedImei] = useState(DUMMY_DEVICES[0].imei);
-  const [view,         setView]         = useState("dashboard"); // "dashboard" | "map"
-  const [loading,      setLoading]      = useState(false);
+  const [devices,      setDevices]      = useState([]);
+  const [selectedImei, setSelectedImei] = useState(null);
+  const [view,         setView]         = useState("dashboard");
+  const [loading,      setLoading]      = useState(true);
   const [backendUp,    setBackendUp]    = useState(false);
+  const [error,        setError]        = useState(null);
 
   const loadDevices = useCallback(async () => {
     try {
       const data = await fetchDevices();
       if (Array.isArray(data)) {
-        setDevices(data.length > 0 ? data : DUMMY_DEVICES);
-        setSelectedImei((prev) => prev ?? (data[0] ?? DUMMY_DEVICES[0]).imei);
+        setDevices(data);
+        setSelectedImei((prev) => prev ?? data[0]?.imei ?? null);
         setBackendUp(true);
+        setError(null);
       }
-    } catch (_) {
+    } catch (e) {
       setBackendUp(false);
+      setError("Cannot reach the backend. Make sure it is running.");
     } finally {
       setLoading(false);
     }
@@ -56,11 +37,29 @@ export default function App() {
     return () => clearInterval(iv);
   }, [loadDevices]);
 
-  const selectedDevice = devices.find((d) => d.imei === selectedImei) ?? devices[0];
+  const selectedDevice = devices.find((d) => d.imei === selectedImei) ?? null;
 
   function handleSelectFromMap(imei) {
     setSelectedImei(imei);
     setView("dashboard");
+  }
+
+  function renderDashboard() {
+    if (!selectedDevice) return null;
+    if (selectedDevice.device_type === "weather") {
+      return (
+        <WeatherDashboard
+          device={selectedDevice}
+          onDeviceUpdated={loadDevices}
+        />
+      );
+    }
+    return (
+      <Dashboard
+        device={selectedDevice}
+        onDeviceUpdated={loadDevices}
+      />
+    );
   }
 
   return (
@@ -75,19 +74,35 @@ export default function App() {
         onViewChange={setView}
       />
       <main className="app-main">
-        {view === "map" && (
+        {/* Backend unreachable */}
+        {!backendUp && !loading && (
+          <div className="empty-state">
+            <span className="empty-icon">🔌</span>
+            <p>{error ?? "Connecting to backend…"}</p>
+            <p className="muted">
+              Run <code>make dev</code> in the backend folder, then refresh.
+            </p>
+          </div>
+        )}
+
+        {/* Backend up, no devices */}
+        {backendUp && !loading && devices.length === 0 && (
+          <div className="empty-state">
+            <span className="empty-icon">📡</span>
+            <p>No devices registered yet.</p>
+            <p className="muted">Power on a node — it will appear here automatically.</p>
+          </div>
+        )}
+
+        {view === "map" && backendUp && (
           <DeviceMap
             devices={devices}
             onSelectDevice={handleSelectFromMap}
-          />
-        )}
-        {view === "dashboard" && selectedDevice && (
-          <Dashboard
-            device={selectedDevice}
-            onDeviceUpdated={loadDevices}
             backendUp={backendUp}
           />
         )}
+
+        {view === "dashboard" && backendUp && renderDashboard()}
       </main>
     </div>
   );

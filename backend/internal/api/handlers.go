@@ -168,3 +168,59 @@ func queryInt(r *http.Request, key string, def int) int {
 	}
 	return n
 }
+
+// ListWeatherReadings godoc
+// GET /api/devices/{imei}/weather?limit=500&offset=0&from=...&to=...
+func (h *Handler) ListWeatherReadings(w http.ResponseWriter, r *http.Request) {
+	imei := mux.Vars(r)["imei"]
+	limit := queryInt(r, "limit", 500)
+	offset := queryInt(r, "offset", 0)
+	if limit > 2000 {
+		limit = 2000
+	}
+	filter := db.ReadingFilter{}
+	if v := r.URL.Query().Get("from"); v != "" {
+		t, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			respond(w, http.StatusBadRequest, map[string]string{"error": "invalid 'from'"})
+			return
+		}
+		filter.From = &t
+	}
+	if v := r.URL.Query().Get("to"); v != "" {
+		t, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			respond(w, http.StatusBadRequest, map[string]string{"error": "invalid 'to'"})
+			return
+		}
+		filter.To = &t
+	}
+	readings, err := db.ListWeatherReadings(h.db, imei, limit, offset, filter)
+	if err != nil {
+		respond(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+	total, _ := db.CountWeatherReadings(h.db, imei, filter)
+	if readings == nil {
+		readings = []db.WeatherReading{}
+	}
+	respond(w, http.StatusOK, map[string]interface{}{
+		"total": total, "limit": limit, "offset": offset, "readings": readings,
+	})
+}
+
+// LatestWeatherReading godoc
+// GET /api/devices/{imei}/weather/latest
+func (h *Handler) LatestWeatherReading(w http.ResponseWriter, r *http.Request) {
+	imei := mux.Vars(r)["imei"]
+	reading, err := db.LatestWeatherReading(h.db, imei)
+	if err != nil {
+		respond(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+	if reading == nil {
+		respond(w, http.StatusNotFound, map[string]string{"error": "no weather readings yet"})
+		return
+	}
+	respond(w, http.StatusOK, reading)
+}

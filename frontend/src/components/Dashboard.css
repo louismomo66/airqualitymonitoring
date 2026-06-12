@@ -87,6 +87,33 @@
   flex-wrap: wrap;
 }
 
+/* Rows per page */
+.rows-per-page {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rows-label {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.rows-select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.rows-select:focus { border-color: var(--accent); }
+
 .btn-export {
   padding: 5px 14px;
   border-radius: 6px;

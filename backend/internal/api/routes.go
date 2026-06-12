@@ -18,7 +18,11 @@ func RegisterRoutes(r *mux.Router, database *sql.DB) {
 	r.HandleFunc("/api/devices/{imei}", h.GetDevice).Methods("GET")
 	r.HandleFunc("/api/devices/{imei}", h.UpdateDevice).Methods("POST")
 
-	// Reading endpoints
+	// AQ reading endpoints
 	r.HandleFunc("/api/devices/{imei}/readings", h.ListReadings).Methods("GET")
 	r.HandleFunc("/api/devices/{imei}/readings/latest", h.LatestReading).Methods("GET")
+
+	// Weather reading endpoints
+	r.HandleFunc("/api/devices/{imei}/weather", h.ListWeatherReadings).Methods("GET")
+	r.HandleFunc("/api/devices/{imei}/weather/latest", h.LatestWeatherReading).Methods("GET")
 }

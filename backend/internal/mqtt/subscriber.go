@@ -162,7 +162,7 @@ func (s *Subscriber) handleMessage(_ pahomqtt.Client, msg pahomqtt.Message) {
 	}
 
 	// Auto-register / touch last_seen
-	deviceID, err := db.UpsertDevice(s.database, p.IMEI)
+	deviceID, err := db.UpsertDevice(s.database, p.IMEI, "aq")
 	if err != nil {
 		log.Printf("❌ UpsertDevice failed for IMEI %s: %v", p.IMEI, err)
 		return

@@ -10,10 +10,10 @@ const ALL_COLUMNS = [
   { key: "pm1_0",        label: "PM1.0 (μg/m³)",      group: "pm"   },
   { key: "pm2_5",        label: "PM2.5 (μg/m³)",      group: "pm"   },
   { key: "pm10",         label: "PM10 (μg/m³)",       group: "pm"   },
-  { key: "shield_temp",  label: "Shield Temp (°C)",   group: "env"  },
-  { key: "shield_hum",   label: "Shield Hum (%)",     group: "env"  },
-  { key: "board_temp",   label: "Board Temp (°C)",    group: "env"  },
-  { key: "board_hum",    label: "Board Hum (%)",      group: "env"  },
+  { key: "shield_temp",  label: "Ambient Temp (°C)",   group: "env"  },
+  { key: "shield_hum",   label: "Ambient Hum (%)",     group: "env"  },
+  { key: "board_temp",   label: "Internal Temp (°C)",  group: "env"  },
+  { key: "board_hum",    label: "Internal Hum (%)",    group: "env"  },
 ];
 
 const GROUPS = [

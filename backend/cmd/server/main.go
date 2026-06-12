@@ -28,15 +28,24 @@ func main() {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
 
-	// ── MQTT subscriber ───────────────────────────────────────
+	// ── MQTT subscribers ──────────────────────────────────────
 	brokerURL := getEnv("MQTT_BROKER", "tcp://localhost:1883")
-	topic := getEnv("MQTT_TOPIC", "airquality/data")
 
-	subscriber := mqtt.NewSubscriber(brokerURL, topic, database)
-	if err := subscriber.Connect(); err != nil {
-		log.Fatalf("failed to connect to MQTT broker: %v", err)
+	// AQ subscriber  → airquality/data
+	aqTopic := getEnv("MQTT_TOPIC", "airquality/data")
+	aqSub := mqtt.NewSubscriber(brokerURL, aqTopic, database)
+	if err := aqSub.Connect(); err != nil {
+		log.Fatalf("failed to connect AQ MQTT subscriber: %v", err)
 	}
-	defer subscriber.Disconnect()
+	defer aqSub.Disconnect()
+
+	// Weather subscriber → weather/data
+	weatherSub := mqtt.NewWeatherSubscriber(brokerURL, "weather/data", database)
+	if err := weatherSub.Connect(); err != nil {
+		log.Printf("⚠️  Weather MQTT subscriber failed to connect: %v", err)
+	} else {
+		defer weatherSub.Disconnect()
+	}
 
 	// ── HTTP API ──────────────────────────────────────────────
 	router := mux.NewRouter()

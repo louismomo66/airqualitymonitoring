@@ -1,0 +1,47 @@
+.wd-wrap { max-width: 1100px; }
+
+/* KPI row with compass */
+.wd-kpi-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.wd-compass-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  flex-shrink: 0;
+}
+
+.wd-compass {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.wd-compass-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.wd-stat-grid {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
+
+/* Weather station tag */
+.tag--weather {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: rgba(59,130,246,0.08);
+}

@@ -27,10 +27,10 @@ export default function ReadingsTable({ readings, loading }) {
             <th>PM1.0 (μg/m³)</th>
             <th>PM2.5 (μg/m³)</th>
             <th>PM10 (μg/m³)</th>
-            <th>Shield Temp (°C)</th>
-            <th>Shield Hum (%)</th>
-            <th>Board Temp (°C)</th>
-            <th>Board Hum (%)</th>
+            <th>Ambient Temp (°C)</th>
+            <th>Ambient Hum (%)</th>
+            <th>Internal Temp (°C)</th>
+            <th>Internal Hum (%)</th>
           </tr>
         </thead>
         <tbody>

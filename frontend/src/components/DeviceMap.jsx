@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
-import { fetchLatestReading } from "../api";
 import { getAqiColor, getAqiLabel } from "../utils/aqi";
 import "leaflet/dist/leaflet.css";
 import "./DeviceMap.css";
@@ -44,26 +43,41 @@ function FitBounds({ positions }) {
 }
 
 // Single device marker — fetches latest reading for the popup
-function DeviceMarker({ device, onSelect }) {
+function DeviceMarker({ device, onSelect, backendUp }) {
   const [reading, setReading] = useState(null);
 
   useEffect(() => {
-    fetchLatestReading(device.imei).then(setReading).catch(() => {});
-  }, [device.imei]);
+    if (!backendUp) return;
+    const endpoint = device.device_type === "weather"
+      ? `/api/devices/${device.imei}/weather/latest`
+      : `/api/devices/${device.imei}/readings/latest`;
+
+    fetch(endpoint)
+      .then((r) => r.ok ? r.json() : null)
+      .then(setReading)
+      .catch(() => {});
+  }, [device.imei, device.device_type, backendUp]);
 
   const color = reading?.pm2_5 != null ? getAqiColor(reading.pm2_5) : "#64748b";
-  const aqi   = reading?.pm2_5 != null ? getAqiLabel(reading.pm2_5) : null;
 
   return (
     <Marker
       position={[device.lat, device.lng]}
-      icon={makeIcon(color)}
+      icon={makeIcon(
+        device.device_type === "weather" ? "#3b82f6" :
+        reading?.pm2_5 != null ? getAqiColor(reading.pm2_5) : "#64748b"
+      )}
     >
       <Popup className="device-popup" minWidth={200}>
         <div className="dp-header">
-          <span className="dp-name">{device.name || `Node ${device.imei.slice(-6)}`}</span>
-          {aqi && (
-            <span className="dp-aqi" style={{ color, borderColor: color }}>{aqi}</span>
+          <span className="dp-name">
+            {device.device_type === "weather" ? "🌤 " : "🌫️ "}
+            {device.name || `Node ${device.imei.slice(-6)}`}
+          </span>
+          {device.device_type === "aq" && reading?.pm2_5 != null && (
+            <span className="dp-aqi" style={{ color: getAqiColor(reading.pm2_5), borderColor: getAqiColor(reading.pm2_5) }}>
+              {getAqiLabel(reading.pm2_5)}
+            </span>
           )}
         </div>
         {device.location && <p className="dp-location">📍 {device.location}</p>}
@@ -71,10 +85,21 @@ function DeviceMarker({ device, onSelect }) {
 
         {reading ? (
           <div className="dp-readings">
-            {reading.pm2_5  != null && <span className="dp-chip">PM2.5 <strong>{reading.pm2_5} μg/m³</strong></span>}
-            {reading.pm10   != null && <span className="dp-chip">PM10 <strong>{reading.pm10} μg/m³</strong></span>}
-            {reading.shield_temp != null && <span className="dp-chip">Temp <strong>{reading.shield_temp}°C</strong></span>}
-            {reading.shield_hum  != null && <span className="dp-chip">Hum <strong>{reading.shield_hum}%</strong></span>}
+            {device.device_type === "aq" ? (
+              <>
+                {reading.pm2_5  != null && <span className="dp-chip">PM2.5 <strong>{reading.pm2_5} μg/m³</strong></span>}
+                {reading.pm10   != null && <span className="dp-chip">PM10 <strong>{reading.pm10} μg/m³</strong></span>}
+                {reading.shield_temp != null && <span className="dp-chip">Temp <strong>{reading.shield_temp}°C</strong></span>}
+                {reading.shield_hum  != null && <span className="dp-chip">Hum <strong>{reading.shield_hum}%</strong></span>}
+              </>
+            ) : (
+              <>
+                {reading.wind_speed     != null && <span className="dp-chip">Wind <strong>{reading.wind_speed} kph</strong></span>}
+                {reading.wind_direction != null && <span className="dp-chip">Dir <strong>{reading.wind_direction}°</strong></span>}
+                {reading.total_rainfall != null && <span className="dp-chip">Rain <strong>{reading.total_rainfall} mm</strong></span>}
+                {reading.bme0_temp      != null && <span className="dp-chip">Temp <strong>{reading.bme0_temp}°C</strong></span>}
+              </>
+            )}
           </div>
         ) : (
           <p className="dp-no-data">No readings yet</p>
@@ -88,7 +113,7 @@ function DeviceMarker({ device, onSelect }) {
   );
 }
 
-export default function DeviceMap({ devices, onSelectDevice }) {
+export default function DeviceMap({ devices, onSelectDevice, backendUp = false }) {
   // Only devices that have coordinates
   const mapped = devices.filter((d) => d.lat != null && d.lng != null);
   const positions = mapped.map((d) => [d.lat, d.lng]);
@@ -127,6 +152,7 @@ export default function DeviceMap({ devices, onSelectDevice }) {
             key={device.imei}
             device={device}
             onSelect={onSelectDevice}
+            backendUp={backendUp}
           />
         ))}
       </MapContainer>

@@ -12,18 +12,19 @@
   box-shadow: 2px 0 8px rgba(0,0,0,0.05);
 }
 
+/* ── Header ─────────────────────────────────────────────── */
 .sidebar-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 24px 20px 20px;
+  padding: 20px 20px 16px;
   border-bottom: 1px solid var(--border);
 }
 
-.sidebar-logo { font-size: 28px; }
+.sidebar-logo { font-size: 26px; }
 
 .sidebar-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text);
 }
@@ -33,12 +34,12 @@
   color: var(--muted);
 }
 
-/* Backend status */
+/* ── Backend status ─────────────────────────────────────── */
 .sidebar-backend-status {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 20px 8px;
+  padding: 7px 16px;
   border-bottom: 1px solid var(--border);
   font-size: 11px;
   color: var(--muted);
@@ -46,12 +47,12 @@
 
 .sidebar-backend-label { font-size: 11px; }
 
-/* Nav buttons */
+/* ── View nav ───────────────────────────────────────────── */
 .sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 10px 10px 4px;
+  padding: 8px 8px 6px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -72,29 +73,68 @@
   transition: background 0.15s, color 0.15s;
 }
 
-.sidebar-nav-btn:hover {
-  background: var(--surface2);
-  color: var(--text);
-}
+.sidebar-nav-btn:hover { background: var(--surface2); color: var(--text); }
 
 .sidebar-nav-btn--active {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(59,130,246,0.1);
   color: var(--accent);
 }
 
-/* Device list */
-.sidebar-section-label {
-  padding: 16px 20px 8px;
-  font-size: 11px;
+/* ── Device type tabs ───────────────────────────────────── */
+.sidebar-device-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+}
+
+.sdt-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 4px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.sdt-tab:hover { color: var(--text); }
+
+.sdt-tab--active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.sdt-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--surface2);
+  font-size: 10px;
+  font-weight: 700;
   color: var(--muted);
 }
 
+.sdt-tab--active .sdt-badge {
+  background: rgba(59,130,246,0.15);
+  color: var(--accent);
+}
+
+/* ── Device list ────────────────────────────────────────── */
 .sidebar-loading,
 .sidebar-empty {
-  padding: 12px 20px;
+  padding: 14px 20px;
   color: var(--muted);
   font-size: 13px;
 }
@@ -102,28 +142,28 @@
 .device-list {
   list-style: none;
   flex: 1;
-  padding: 0 8px;
+  padding: 6px 8px 0;
 }
 
 .device-item {
-  padding: 12px;
+  padding: 11px 12px;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .device-item:hover { background: var(--surface2); }
 
 .device-item--active {
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  background: rgba(59,130,246,0.08);
+  border: 1px solid rgba(59,130,246,0.25);
 }
 
 .device-item-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   margin-bottom: 4px;
 }
 
@@ -152,12 +192,13 @@
 .device-last-seen {
   font-size: 11px;
   color: var(--muted);
-  padding-left: 15px;
+  padding-left: 14px;
   line-height: 1.8;
 }
 
+/* ── Footer ─────────────────────────────────────────────── */
 .sidebar-footer {
-  padding: 14px 20px;
+  padding: 12px 20px;
   border-top: 1px solid var(--border);
 }
 
