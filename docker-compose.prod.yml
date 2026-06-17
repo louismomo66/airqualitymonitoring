@@ -1,0 +1,6 @@
+services:
+  backend:
+    image: ${DOCKER_USERNAME}/docker-repo:airqualitymonitoring-backend
+
+  frontend:
+    image: ${DOCKER_USERNAME}/docker-repo:airqualitymonitoring-frontend

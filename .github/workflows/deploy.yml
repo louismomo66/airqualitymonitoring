@@ -1,0 +1,61 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DEPLOY_DIR: ~/airqualitymonitoring
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build and push images
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml build --no-cache
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml push
+
+      - name: Copy compose files to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_PUBLIC_IP_ADDRESS }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml,docker-compose.prod.yml"
+          target: ${{ env.DEPLOY_DIR }}
+
+      - name: Deploy to VM
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VM_PUBLIC_IP_ADDRESS }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p ${{ env.DEPLOY_DIR }}
+
+            cat <<'EOF' > ${{ env.DEPLOY_DIR }}/.env
+            ${{ secrets.ENV_FILE_CONTENTS }}
+            EOF
+
+            cat <<'EOF' >> ${{ env.DEPLOY_DIR }}/.env
+            DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+            EOF
+
+            docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_TOKEN }}"
+            docker compose --env-file ${{ env.DEPLOY_DIR }}/.env -f ${{ env.DEPLOY_DIR }}/docker-compose.yml -f ${{ env.DEPLOY_DIR }}/docker-compose.prod.yml down
+            docker image prune -af
+            docker compose --env-file ${{ env.DEPLOY_DIR }}/.env -f ${{ env.DEPLOY_DIR }}/docker-compose.yml -f ${{ env.DEPLOY_DIR }}/docker-compose.prod.yml pull
+            docker compose --env-file ${{ env.DEPLOY_DIR }}/.env -f ${{ env.DEPLOY_DIR }}/docker-compose.yml -f ${{ env.DEPLOY_DIR }}/docker-compose.prod.yml up -d
