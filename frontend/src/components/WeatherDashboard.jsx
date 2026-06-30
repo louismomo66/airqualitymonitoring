@@ -14,12 +14,10 @@ const TABLE_LIMITS  = [10, 25, 50, 100, 200];
 const WIND_SERIES = [
   { key: "wind_speed", label: "Wind Speed", color: "#3b82f6", unit: "kph" },
 ];
-
 const RAIN_SERIES = [
   { key: "total_rainfall", label: "Total Rainfall", color: "#0ea5e9", unit: "mm" },
   { key: "rainfall_rate",  label: "Rainfall Rate",  color: "#06b6d4", unit: "mm/hr" },
 ];
-
 const TEMP_SERIES_CH = (ch) => [
   { key: `bme${ch}_temp`, label: "BME Temp", color: "#e85d04", unit: "°C", yAxisId: "temp" },
   { key: `htu${ch}_temp`, label: "HTU Temp", color: "#f48c06", unit: "°C", yAxisId: "temp" },
@@ -38,32 +36,30 @@ function fmtTime(ts) {
        + `${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`;
 }
 
-function toChartData(readings) {
-  return readings.map((r) => ({ ...r, time: fmtTime(r.received_at), rawTime: r.received_at }));
+function toChartData(r) {
+  return r.map((x) => ({ ...x, time: fmtTime(x.received_at), rawTime: x.received_at }));
 }
 
 function WindCompass({ deg }) {
-  const label = degreesToCompass(deg);
   const angle = deg ?? 0;
   return (
     <div className="wd-compass">
       <svg width="80" height="80" viewBox="0 0 80 80">
-        <circle cx="40" cy="40" r="36" fill="#f0f4f8" stroke="#d0d7e3" strokeWidth="2" />
+        <circle cx="40" cy="40" r="36" fill="#f0f4f8" stroke="#d0d7e3" strokeWidth="2"/>
         {["N","E","S","W"].map((d, i) => {
           const rad = (i * 90 - 90) * Math.PI / 180;
-          return (
-            <text key={d} x={40 + 28*Math.cos(rad)} y={40 + 28*Math.sin(rad)}
-              textAnchor="middle" dominantBaseline="middle"
-              fontSize="10" fontWeight="700" fill="#64748b">{d}</text>
-          );
+          return <text key={d} x={40+28*Math.cos(rad)} y={40+28*Math.sin(rad)}
+            textAnchor="middle" dominantBaseline="middle" fontSize="10" fontWeight="700" fill="#64748b">{d}</text>;
         })}
-        <g transform={`rotate(${angle}, 40, 40)`}>
-          <polygon points="40,12 43,40 40,34 37,40" fill="#3b82f6" />
-          <polygon points="40,68 43,40 40,46 37,40" fill="#94a3b8" />
+        <g transform={`rotate(${angle},40,40)`}>
+          <polygon points="40,12 43,40 40,34 37,40" fill="#3b82f6"/>
+          <polygon points="40,68 43,40 40,46 37,40" fill="#94a3b8"/>
         </g>
-        <circle cx="40" cy="40" r="3" fill="#1e293b" />
+        <circle cx="40" cy="40" r="3" fill="#1e293b"/>
       </svg>
-      <div className="wd-compass-label">{deg != null ? `${deg}° ${label}` : "—"}</div>
+      <div className="wd-compass-label">
+        {deg != null ? `${deg}° ${degreesToCompass(deg)}` : "—"}
+      </div>
     </div>
   );
 }
@@ -73,18 +69,25 @@ function WeatherTable({ readings, loading }) {
   if (!readings?.length) return <div className="table-state">No readings yet.</div>;
   return (
     <div className="table-wrapper">
-      <table className="readings-table">
+      <table className="readings-table readings-table--weather">
         <thead>
           <tr>
-            <th>Received At</th>
-            <th>Wind (kph)</th>
-            <th>Direction</th>
-            <th>Rainfall (mm)</th>
-            <th>Rate (mm/hr)</th>
-            <th>CH0 Temp (°C)</th>
-            <th>CH0 Hum (%)</th>
-            <th>CH1 Temp (°C)</th>
-            <th>CH2 Temp (°C)</th>
+            <th rowSpan="2">Received At</th>
+            <th colSpan="2">Wind</th>
+            <th colSpan="2">Rain</th>
+            <th colSpan="8">Channel 0 (CH0)</th>
+            <th colSpan="8">Channel 1 (CH1)</th>
+            <th colSpan="8">Channel 2 (CH2)</th>
+          </tr>
+          <tr>
+            <th>Speed (kph)</th><th>Dir</th>
+            <th>Total (mm)</th><th>Rate (mm/hr)</th>
+            {/* CH0 */}
+            <th>BME T (°C)</th><th>BME H (%)</th><th>HTU T (°C)</th><th>HTU H (%)</th><th>SHT T (°C)</th><th>SHT H (%)</th><th>AHT T (°C)</th><th>AHT H (%)</th>
+            {/* CH1 */}
+            <th>BME T (°C)</th><th>BME H (%)</th><th>HTU T (°C)</th><th>HTU H (%)</th><th>SHT T (°C)</th><th>SHT H (%)</th><th>AHT T (°C)</th><th>AHT H (%)</th>
+            {/* CH2 */}
+            <th>BME T (°C)</th><th>BME H (%)</th><th>HTU T (°C)</th><th>HTU H (%)</th><th>SHT T (°C)</th><th>SHT H (%)</th><th>AHT T (°C)</th><th>AHT H (%)</th>
           </tr>
         </thead>
         <tbody>
@@ -94,15 +97,69 @@ function WeatherTable({ readings, loading }) {
               <td>{r.wind_speed ?? "—"}</td>
               <td>{r.wind_direction != null ? `${r.wind_direction}° ${degreesToCompass(r.wind_direction)}` : "—"}</td>
               <td>{r.total_rainfall ?? "—"}</td>
-              <td>{r.rainfall_rate ?? "—"}</td>
-              <td>{r.bme0_temp ?? "—"}</td>
-              <td>{r.bme0_hum ?? "—"}</td>
-              <td>{r.bme1_temp ?? "—"}</td>
-              <td>{r.bme2_temp ?? "—"}</td>
+              <td>{r.rainfall_rate  ?? "—"}</td>
+              {/* CH0 */}
+              <td>{r.bme0_temp ?? "—"}</td><td>{r.bme0_hum ?? "—"}</td>
+              <td>{r.htu0_temp ?? "—"}</td><td>{r.htu0_hum ?? "—"}</td>
+              <td>{r.sht0_temp ?? "—"}</td><td>{r.sht0_hum ?? "—"}</td>
+              <td>{r.aht0_temp ?? "—"}</td><td>{r.aht0_hum ?? "—"}</td>
+              {/* CH1 */}
+              <td>{r.bme1_temp ?? "—"}</td><td>{r.bme1_hum ?? "—"}</td>
+              <td>{r.htu1_temp ?? "—"}</td><td>{r.htu1_hum ?? "—"}</td>
+              <td>{r.sht1_temp ?? "—"}</td><td>{r.sht1_hum ?? "—"}</td>
+              <td>{r.aht1_temp ?? "—"}</td><td>{r.aht1_hum ?? "—"}</td>
+              {/* CH2 */}
+              <td>{r.bme2_temp ?? "—"}</td><td>{r.bme2_hum ?? "—"}</td>
+              <td>{r.htu2_temp ?? "—"}</td><td>{r.htu2_hum ?? "—"}</td>
+              <td>{r.sht2_temp ?? "—"}</td><td>{r.sht2_hum ?? "—"}</td>
+              <td>{r.aht2_temp ?? "—"}</td><td>{r.aht2_hum ?? "—"}</td>
             </tr>
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function ChannelGroup({ channel, data, loading }) {
+  const sensors = [
+    { name: "BME280 (0x77)", prefix: "bme" },
+    { name: "HTU21D (0x40)", prefix: "htu" },
+    { name: "SHT31 (0x44)",  prefix: "sht" },
+    { name: "AHT20 (0x38)",  prefix: "aht" },
+  ];
+
+  if (loading) {
+    return (
+      <div className="wd-channel-card">
+        <h4 className="wd-channel-title">🔌 Channel {channel}</h4>
+        <div className="sidebar-loading" style={{ padding: "20px 0" }}>Loading…</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="wd-channel-card">
+      <h4 className="wd-channel-title">🔌 Channel {channel}</h4>
+      <div className="wd-channel-grid">
+        {sensors.map(s => {
+          const tKey = `${s.prefix}${channel}_temp`;
+          const hKey = `${s.prefix}${channel}_hum`;
+          const tVal = data?.[tKey];
+          const hVal = data?.[hKey];
+
+          return (
+            <div key={s.name} className="wd-sensor-row">
+              <span className="wd-sensor-name">{s.name}</span>
+              <div className="wd-sensor-vals">
+                <span className="wd-val-temp">{tVal != null ? `${tVal.toFixed(1)}°C` : "—"}</span>
+                <span className="wd-val-divider">/</span>
+                <span className="wd-val-hum">{hVal != null ? `${hVal.toFixed(1)}%` : "—"}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -122,19 +179,15 @@ export default function WeatherDashboard({ device, onDeviceUpdated }) {
 
   const loadLatest = useCallback(async () => {
     setLoadingLatest(true);
-    try {
-      const d = await fetchLatestWeatherReading(device.imei);
-      setLatest(d ?? null);
-    } catch (_) { setLatest(null); }
+    try { setLatest((await fetchLatestWeatherReading(device.imei)) ?? null); }
+    catch (_) { setLatest(null); }
     setLoadingLatest(false);
   }, [device.imei]);
 
   const loadChart = useCallback(async () => {
     setLoadingChart(true);
-    try {
-      const d = await fetchWeatherReadings(device.imei, CHART_LIMIT, 0);
-      setChartData(toChartData(d?.readings ?? []));
-    } catch (_) { setChartData([]); }
+    try { setChartData(toChartData((await fetchWeatherReadings(device.imei, CHART_LIMIT, 0))?.readings ?? [])); }
+    catch (_) { setChartData([]); }
     setLoadingChart(false);
   }, [device.imei]);
 
@@ -142,8 +195,7 @@ export default function WeatherDashboard({ device, onDeviceUpdated }) {
     setLoadingTable(true);
     try {
       const d = await fetchWeatherReadings(device.imei, tableLimit, tablePage * tableLimit);
-      setTableReadings(d?.readings ?? []);
-      setTableTotal(d?.total ?? 0);
+      setTableReadings(d?.readings ?? []); setTableTotal(d?.total ?? 0);
     } catch (_) { setTableReadings([]); setTableTotal(0); }
     setLoadingTable(false);
   }, [device.imei, tablePage, tableLimit]);
@@ -179,42 +231,36 @@ export default function WeatherDashboard({ device, onDeviceUpdated }) {
       </div>
 
       <div className="wd-kpi-row">
-        <div className="wd-compass-wrap">
-          <WindCompass deg={latest?.wind_direction} />
-        </div>
+        <div className="wd-compass-wrap"><WindCompass deg={latest?.wind_direction} /></div>
         <div className="stat-grid wd-stat-grid">
-          <StatCard label="Wind Speed"     value={latest?.wind_speed}    unit="kph"    icon="💨" loading={loadingLatest} />
-          <StatCard label="Beaufort"       value={beaufort.scale}        unit={beaufort.label} icon="🌬️" loading={loadingLatest} />
-          <StatCard label="Total Rainfall" value={latest?.total_rainfall} unit="mm"    icon="🌧️" loading={loadingLatest} />
-          <StatCard label="Rainfall Rate"  value={latest?.rainfall_rate}  unit="mm/hr" icon="⏱️" loading={loadingLatest} />
-          <StatCard label="CH0 Temp"       value={latest?.bme0_temp}      unit="°C"    icon="🌡️" loading={loadingLatest} />
-          <StatCard label="CH0 Humidity"   value={latest?.bme0_hum}       unit="%"     icon="💧" loading={loadingLatest} />
+          <StatCard label="Wind Speed"     value={latest?.wind_speed}     unit="kph"    icon="💨" loading={loadingLatest} />
+          <StatCard label="Beaufort"       value={beaufort.scale}         unit={beaufort.label} icon="🌬️" loading={loadingLatest} />
+          <StatCard label="Total Rainfall" value={latest?.total_rainfall} unit="mm"     icon="🌧️" loading={loadingLatest} />
+          <StatCard label="Rainfall Rate"  value={latest?.rainfall_rate}  unit="mm/hr"  icon="⏱️" loading={loadingLatest} />
         </div>
       </div>
 
+      <h3 className="section-title" style={{ marginBottom: "16px" }}>📡 Live Multiplexer Channels</h3>
+      <div className="wd-channels-row">
+        {[0, 1, 2].map(ch => (
+          <ChannelGroup key={ch} channel={ch} data={latest} loading={loadingLatest} />
+        ))}
+      </div>
+
       <TimeSeriesChart title="Wind Speed" subtitle="kph — drag brush to pan"
-        data={chartData} series={WIND_SERIES} yUnit="kph" loading={loadingChart} />
-
+        data={chartData} series={WIND_SERIES} yUnit="kph" loading={loadingChart}/>
       <TimeSeriesChart title="Rainfall" subtitle="Total (mm) and Rate (mm/hr)"
-        data={chartData} series={RAIN_SERIES} yUnit="" loading={loadingChart} />
-
-      <TimeSeriesChart title="Channel 0 — Temperature & Humidity"
-        subtitle="Temp left axis (°C) · Humidity right axis (%)"
-        data={chartData} series={TEMP_SERIES_CH(0)} yUnit="" dualAxis loading={loadingChart} />
-
-      <TimeSeriesChart title="Channel 1 — Temperature & Humidity"
-        subtitle="Temp left axis (°C) · Humidity right axis (%)"
-        data={chartData} series={TEMP_SERIES_CH(1)} yUnit="" dualAxis loading={loadingChart} />
-
-      <TimeSeriesChart title="Channel 2 — Temperature & Humidity"
-        subtitle="Temp left axis (°C) · Humidity right axis (%)"
-        data={chartData} series={TEMP_SERIES_CH(2)} yUnit="" dualAxis loading={loadingChart} />
+        data={chartData} series={RAIN_SERIES} yUnit="" loading={loadingChart}/>
+      {[0,1,2].map(ch => (
+        <TimeSeriesChart key={ch}
+          title={`Channel ${ch} — Temperature & Humidity`}
+          subtitle="Temp left axis (°C) · Humidity right axis (%)"
+          data={chartData} series={TEMP_SERIES_CH(ch)} yUnit="" dualAxis loading={loadingChart}/>
+      ))}
 
       <div className="section">
         <div className="section-header">
-          <h3 className="section-title">
-            Readings <span className="count-badge">{tableTotal.toLocaleString()}</span>
-          </h3>
+          <h3 className="section-title">Readings <span className="count-badge">{tableTotal.toLocaleString()}</span></h3>
           <div className="section-header-actions">
             <div className="rows-per-page">
               <label className="rows-label">Show</label>
@@ -226,23 +272,19 @@ export default function WeatherDashboard({ device, onDeviceUpdated }) {
             </div>
             <button className="btn-export" onClick={() => setExportOpen(true)} disabled={chartData.length === 0}>⬇ Export</button>
             <div className="pagination">
-              <button className="btn-page" disabled={tablePage === 0} onClick={() => setTablePage(p => p - 1)}>← Prev</button>
-              <span className="page-info">Page {tablePage + 1} / {Math.max(1, Math.ceil(tableTotal / tableLimit))}</span>
-              <button className="btn-page" disabled={(tablePage + 1) * tableLimit >= tableTotal} onClick={() => setTablePage(p => p + 1)}>Next →</button>
+              <button className="btn-page" disabled={tablePage === 0} onClick={() => setTablePage(p=>p-1)}>← Prev</button>
+              <span className="page-info">Page {tablePage+1} / {Math.max(1,Math.ceil(tableTotal/tableLimit))}</span>
+              <button className="btn-page" disabled={(tablePage+1)*tableLimit>=tableTotal} onClick={() => setTablePage(p=>p+1)}>Next →</button>
             </div>
           </div>
         </div>
-        <WeatherTable readings={tableReadings} loading={loadingTable} />
+        <WeatherTable readings={tableReadings} loading={loadingTable}/>
       </div>
 
-      {editOpen && (
-        <DeviceEditModal device={device} onClose={() => setEditOpen(false)}
-          onSaved={() => { setEditOpen(false); onDeviceUpdated(); }} />
-      )}
-      {exportOpen && (
-        <ExportModal readings={chartData} deviceName={displayName}
-          onClose={() => setExportOpen(false)} />
-      )}
+      {editOpen && <DeviceEditModal device={device} onClose={() => setEditOpen(false)}
+        onSaved={() => { setEditOpen(false); onDeviceUpdated(); }}/>}
+      {exportOpen && <ExportModal readings={chartData} deviceName={displayName} deviceType="weather"
+        onClose={() => setExportOpen(false)}/>}
     </div>
   );
 }

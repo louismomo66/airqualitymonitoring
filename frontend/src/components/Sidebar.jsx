@@ -55,14 +55,20 @@ export default function Sidebar({
       <div className="sidebar-device-tabs">
         <button
           className={`sdt-tab ${deviceTab === "aq" ? "sdt-tab--active" : ""}`}
-          onClick={() => setDeviceTab("aq")}
+          onClick={() => {
+            setDeviceTab("aq");
+            if (aqDevices.length > 0) onSelect(aqDevices[0].imei);
+          }}
         >
           🌫️ Air Quality
           <span className="sdt-badge">{aqDevices.length}</span>
         </button>
         <button
           className={`sdt-tab ${deviceTab === "weather" ? "sdt-tab--active" : ""}`}
-          onClick={() => setDeviceTab("weather")}
+          onClick={() => {
+            setDeviceTab("weather");
+            if (weatherDevices.length > 0) onSelect(weatherDevices[0].imei);
+          }}
         >
           🌤 Weather
           <span className="sdt-badge">{weatherDevices.length}</span>

@@ -45,3 +45,75 @@
   color: #3b82f6;
   background: rgba(59,130,246,0.08);
 }
+
+/* Channel group grids */
+.wd-channels-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.wd-channel-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.wd-channel-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.wd-channel-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wd-sensor-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.wd-sensor-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.wd-sensor-vals {
+  display: flex;
+  gap: 6px;
+  font-size: 13px;
+  font-family: monospace;
+}
+
+.wd-val-temp {
+  color: #e85d04;
+  font-weight: 600;
+}
+
+.wd-val-divider {
+  color: var(--text-muted);
+}
+
+.wd-val-hum {
+  color: #0096c7;
+  font-weight: 600;
+}
+
+/* Support large weather table horizontal scrolling */
+.readings-table--weather {
+  min-width: 1600px;
+}
+

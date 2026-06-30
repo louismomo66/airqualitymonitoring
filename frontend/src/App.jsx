@@ -19,7 +19,12 @@ export default function App() {
       const data = await fetchDevices();
       if (Array.isArray(data)) {
         setDevices(data);
-        setSelectedImei((prev) => prev ?? data[0]?.imei ?? null);
+        setSelectedImei((prev) => {
+          if (prev) return prev; // keep existing selection
+          // Default to first AQ device (matches sidebar default tab)
+          const firstAq = data.find((d) => d.device_type !== "weather");
+          return firstAq?.imei ?? data[0]?.imei ?? null;
+        });
         setBackendUp(true);
         setError(null);
       }

@@ -4,7 +4,8 @@ import DateRangeFilter from "./DateRangeFilter";
 import "./ExportModal.css";
 
 // All exportable columns with friendly labels
-const ALL_COLUMNS = [
+// AQ Columns
+const AQ_COLUMNS = [
   { key: "received_at",  label: "Timestamp",         group: "meta" },
   { key: "imei",         label: "IMEI",               group: "meta" },
   { key: "pm1_0",        label: "PM1.0 (μg/m³)",      group: "pm"   },
@@ -16,10 +17,53 @@ const ALL_COLUMNS = [
   { key: "board_hum",    label: "Internal Hum (%)",    group: "env"  },
 ];
 
-const GROUPS = [
+const AQ_GROUPS = [
   { key: "meta", label: "Info"          },
   { key: "pm",   label: "Air Quality"   },
   { key: "env",  label: "Temp & Hum"    },
+];
+
+// Weather Columns
+const WEATHER_COLUMNS = [
+  { key: "received_at",     label: "Timestamp",            group: "meta" },
+  { key: "imei",            label: "IMEI",                 group: "meta" },
+  { key: "wind_speed",       label: "Wind Speed (kph)",     group: "wind" },
+  { key: "wind_direction",   label: "Wind Dir (deg)",       group: "wind" },
+  { key: "total_rainfall",   label: "Total Rain (mm)",      group: "rain" },
+  { key: "rainfall_rate",    label: "Rain Rate (mm/hr)",    group: "rain" },
+  { key: "bme0_temp",        label: "CH0 BME Temp (°C)",     group: "ch0"  },
+  { key: "bme0_hum",         label: "CH0 BME Hum (%)",       group: "ch0"  },
+  { key: "htu0_temp",        label: "CH0 HTU Temp (°C)",     group: "ch0"  },
+  { key: "htu0_hum",         label: "CH0 HTU Hum (%)",       group: "ch0"  },
+  { key: "sht0_temp",        label: "CH0 SHT Temp (°C)",     group: "ch0"  },
+  { key: "sht0_hum",         label: "CH0 SHT Hum (%)",       group: "ch0"  },
+  { key: "aht0_temp",        label: "CH0 AHT Temp (°C)",     group: "ch0"  },
+  { key: "aht0_hum",         label: "CH0 AHT Hum (%)",       group: "ch0"  },
+  { key: "bme1_temp",        label: "CH1 BME Temp (°C)",     group: "ch1"  },
+  { key: "bme1_hum",         label: "CH1 BME Hum (%)",       group: "ch1"  },
+  { key: "htu1_temp",        label: "CH1 HTU Temp (°C)",     group: "ch1"  },
+  { key: "htu1_hum",         label: "CH1 HTU Hum (%)",       group: "ch1"  },
+  { key: "sht1_temp",        label: "CH1 SHT Temp (°C)",     group: "ch1"  },
+  { key: "sht1_hum",         label: "CH1 SHT Hum (%)",       group: "ch1"  },
+  { key: "aht1_temp",        label: "CH1 AHT Temp (°C)",     group: "ch1"  },
+  { key: "aht1_hum",         label: "CH1 AHT Hum (%)",       group: "ch1"  },
+  { key: "bme2_temp",        label: "CH2 BME Temp (°C)",     group: "ch2"  },
+  { key: "bme2_hum",         label: "CH2 BME Hum (%)",       group: "ch2"  },
+  { key: "htu2_temp",        label: "CH2 HTU Temp (°C)",     group: "ch2"  },
+  { key: "htu2_hum",         label: "CH2 HTU Hum (%)",       group: "ch2"  },
+  { key: "sht2_temp",        label: "CH2 SHT Temp (°C)",     group: "ch2"  },
+  { key: "sht2_hum",         label: "CH2 SHT Hum (%)",       group: "ch2"  },
+  { key: "aht2_temp",        label: "CH2 AHT Temp (°C)",     group: "ch2"  },
+  { key: "aht2_hum",         label: "CH2 AHT Hum (%)",       group: "ch2"  },
+];
+
+const WEATHER_GROUPS = [
+  { key: "meta", label: "Info"           },
+  { key: "wind", label: "Wind Sensor"    },
+  { key: "rain", label: "Rain Sensor"    },
+  { key: "ch0",  label: "MUX Channel 0"  },
+  { key: "ch1",  label: "MUX Channel 1"  },
+  { key: "ch2",  label: "MUX Channel 2"  },
 ];
 
 function defaultRange() {
@@ -27,8 +71,11 @@ function defaultRange() {
   return { from: new Date(now - 24 * 3600_000).toISOString(), to: now.toISOString() };
 }
 
-export default function ExportModal({ readings, deviceName, onClose }) {
-  const [selected,  setSelected]  = useState(ALL_COLUMNS.map((c) => c.key));
+export default function ExportModal({ readings, deviceName, deviceType, onClose }) {
+  const allColumns = deviceType === "weather" ? WEATHER_COLUMNS : AQ_COLUMNS;
+  const groups     = deviceType === "weather" ? WEATHER_GROUPS : AQ_GROUPS;
+
+  const [selected,  setSelected]  = useState(allColumns.map((c) => c.key));
   const [dateRange, setDateRange] = useState(defaultRange);
 
   // Filter rows by date range
@@ -48,7 +95,7 @@ export default function ExportModal({ readings, deviceName, onClose }) {
   }
 
   function toggleGroup(groupKey) {
-    const groupKeys = ALL_COLUMNS.filter((c) => c.group === groupKey).map((c) => c.key);
+    const groupKeys = allColumns.filter((c) => c.group === groupKey).map((c) => c.key);
     const allOn     = groupKeys.every((k) => selected.includes(k));
     if (allOn) {
       setSelected((prev) => prev.filter((k) => !groupKeys.includes(k)));
@@ -57,12 +104,12 @@ export default function ExportModal({ readings, deviceName, onClose }) {
     }
   }
 
-  function selectAll()   { setSelected(ALL_COLUMNS.map((c) => c.key)); }
+  function selectAll()   { setSelected(allColumns.map((c) => c.key)); }
   function deselectAll() { setSelected([]); }
 
   function handleExport() {
     if (!selected.length || !filtered.length) return;
-    const orderedCols = ALL_COLUMNS.filter((c) => selected.includes(c.key));
+    const orderedCols = allColumns.filter((c) => selected.includes(c.key));
     const headers = Object.fromEntries(orderedCols.map((c) => [c.key, c.label]));
     const safeName = `${(deviceName || "device").replace(/[^a-z0-9]/gi, "_")}_readings`;
     exportCsv(filtered, orderedCols.map((c) => c.key), headers, safeName);
@@ -106,8 +153,8 @@ export default function ExportModal({ readings, deviceName, onClose }) {
             </div>
           </div>
 
-          {GROUPS.map((g) => {
-            const cols = ALL_COLUMNS.filter((c) => c.group === g.key);
+          {groups.map((g) => {
+            const cols = allColumns.filter((c) => c.group === g.key);
             const allOn = cols.every((c) => selected.includes(c.key));
             return (
               <div className="export-group" key={g.key}>
