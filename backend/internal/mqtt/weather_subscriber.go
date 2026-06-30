@@ -116,6 +116,7 @@ func (s *WeatherSubscriber) onConnect(c pahomqtt.Client) {
 		return
 	}
 	s.subscribed = true
+	log.Printf("✅ Weather subscribed to %s", s.topic)
 }
 
 func (s *WeatherSubscriber) onConnectionLost(_ pahomqtt.Client, err error) {
